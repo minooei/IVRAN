@@ -6,64 +6,49 @@ var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 var DialPlan = require('./dialplans');
 var bunyan = require('bunyan');
+var clr = require('chalk');
+
 var log = bunyan.createLogger({
 	name: 'myapp',
 	streams: [
 		{
-			path: './myapp.log'  // log ERROR and above to a file
+			level: 'debug',
+			path: './reservation.log'  // log ERROR and above to a file
 		}
 	]
 });
 
+//TODO use timer in a convenient way
 var timers = {};
+
 var Channels = {};
 
-var menu = {
-	// valid menu options
-	stage: ['intro', 'doctors'],
-	options: [1, 2],
-	// note: this uses the 'extra' sounds package
-	sounds: ['sound:press-1', 'sound:or', 'sound:press-2']
-};
-
 var start = function Start() {
+
 	ari.connect('http://localhost:8088', 'asterisk', 'asterisk', clientLoaded);
 
 	var self = this;
 
 
-// Handler for client being loaded
+	// Handler for client being loaded
 	function clientLoaded(err, client) {
 		if (err) {
 			throw err;
 		}
-
 		client.on('StasisStart', stasisStart);
 		client.on('StasisEnd', stasisEnd);
-		var dialPlan = DialPlan('Hospital');
-		//console.log(dialPlan);
+
 		// Handler for StasisStart event
 		function stasisStart(event, channel) {
-			console.log('Channel %s has entered the application', channel.caller.number);
+			console.log(clr.green('has entered the application : ', channel.caller.number, channel.id));
+			log.info('%s has entered the application id= %s', channel.caller.number, channel.id);
+
 			Channels[channel.id] = {};
-			Channels[channel.id].state = 1;
-			Channels[channel.id].choices = [];
+			Channels[channel.id].state = '1';
 			Channels[channel.id].CallerID = channel.caller.number;
 
-			self.emit('HospitalIntro', channel.id);
 
-			//log.info({channel: channel});
-			//channel.getChannelVar({variable: 'CALLERID(num)'},
-			//	function (err, variable) {
-			//		console.log(variable.value)
-			//	}
-			//);
-
-			//console.log(channel.list)
-			// log.info(channel.list);
-
-
-			console.log(channel.id);
+			//log.debug(Channels);
 
 
 			channel.on('ChannelDtmfReceived', dtmfReceived);
@@ -71,31 +56,39 @@ var start = function Start() {
 			channel.answer(function (err) {
 				if (err) {
 					console.log(err);
+					log.error(err);
 					throw err;
 				}
 
-				playIntroMenu(channel);
+				//TODO get name from dialplan
+				self.emit('HospitalIntro', channel, client);
+
+				//playIntroMenu(channel);
 			});
 		}
 
 		// Handler for StasisEnd event
 		function stasisEnd(event, channel) {
-			console.log('Channel %s has left the application', channel.name);
+			console.log(clr.red('Channel has left the application :', channel.id));
 
+			delete Channels[channel.id];
 			// clean up listeners
 			channel.removeListener('ChannelDtmfReceived', dtmfReceived);
-			cancelTimeout(channel);
+			//cancelTimeout(channel);
 		}
 
 		// Main DTMF handler
 		function dtmfReceived(event, channel) {
-			cancelTimeout(channel);
+			//cancelTimeout(channel);
 			var digit = parseInt(event.digit);
+			var dialPlan = DialPlan('Hospital');
 
 			console.log('Channel %s entered %d', channel.name, digit);
 
 			// will be non-zero if valid
-			var valid = ~menu.options.indexOf(digit);
+			var state = Channels[channel.id].state;
+			var valid = ~dialPlan[state].validInput.indexOf(digit);
+
 			if (valid) {
 
 				handleDtmf(channel, digit);
@@ -113,102 +106,23 @@ var start = function Start() {
 			}
 		}
 
-		/**
-		 * Play our intro menu to the specified channel
-		 *
-		 * Since we want to interrupt the playback of the menu when the user presses
-		 * a DTMF key, we maintain the state of the menu via the MenuState object.
-		 * A menu completes in one of two ways:
-		 * (1) The user hits a key
-		 * (2) The menu finishes to completion
-		 *
-		 * In the case of (2), a timer is started for the channel. If the timer pops,
-		 * a prompt is played back and the menu restarted.
-		 **/
-		function playIntroMenu(channel) {
-			var state = {
-				currentSound: menu.sounds[0],
-				currentPlayback: undefined,
-				done: false
-			};
 
-			channel.on('ChannelDtmfReceived', cancelMenu);
-			channel.on('StasisEnd', cancelMenu);
-			queueUpSound();
-
-			// Cancel the menu, as the user did something
-			function cancelMenu() {
-				state.done = true;
-				if (state.currentPlayback) {
-					state.currentPlayback.stop(function (err) {
-						//if(err)
-						//console.log(err+"106");
-						// ignore errors
-					});
-				}
-
-				// remove listeners as future calls to playIntroMenu will create new ones
-				channel.removeListener('ChannelDtmfReceived', cancelMenu);
-				channel.removeListener('StasisEnd', cancelMenu);
-			}
-
-			// Start up the next sound and handle whatever happens
-			function queueUpSound() {
-				if (!state.done) {
-
-					// have we played all sounds in the menu?
-					if (!state.currentSound) {
-						var timer = setTimeout(stillThere, 10 * 1000);
-						timers[channel.id] = timer;
-					} else {
-						var playback = client.Playback();
-						state.currentPlayback = playback;
-
-						channel.play({media: state.currentSound}, playback, function (err) {
-							if (err)
-								console.log(err + "163");
-							// ignore errors
-						});
-						playback.once('PlaybackFinished', function (event, playback) {
-							queueUpSound();
-						});
-
-						var nextSoundIndex = menu.sounds.indexOf(state.currentSound) + 1;
-						state.currentSound = menu.sounds[nextSoundIndex];
-					}
-				}
-			}
-
-			// plays are-you-still-there and restarts the menu
-			function stillThere() {
-				console.log('Channel %s stopped paying attention...', channel.name);
-
-				channel.play({media: 'sound:are-you-still-there'}, function (err) {
-					if (err) {
-						console.log(err);
-						throw err;
-					}
-
-					playIntroMenu(channel);
-				});
-			}
-		}
 
 		// Cancel the timeout for the channel
-		function cancelTimeout(channel) {
-			var timer = timers[channel.id];
-
-			if (timer) {
-				clearTimeout(timer);
-				delete timers[channel.id];
-			}
-		}
+		//function cancelTimeout(channel) {
+		//	var timer = timers[channel.id];
+		//
+		//	if (timer) {
+		//		clearTimeout(timer);
+		//		delete timers[channel.id];
+		//	}
+		//}
 
 		// Handler for channel pressing valid option
 		function handleDtmf(channel, digit) {
 			var parts = ['sound:you-entered', util.format('digits:%s', digit)];
 			var done = 0;
-			Channels[channel.id].choices.push(digit);
+			//Channels[channel.id].choices.push(digit);
 			var playback = client.Playback();
 			channel.play({media: 'sound:you-entered'}, playback, function (err) {
 				// ignore errors
