@@ -1,13 +1,20 @@
 /**
  * Created by mohammad on 8/2/15.
  */
-//Last Edit :2015-08-03T00:20
+
+//where ever  playing a file set channel.isPlaying true
+
+
+var Channels = require( './channels' );
 
 module.exports = (function () {
 	var _return = {};
 
+	//LAST EDIT : 2015-08-07T18:36
+
 	_return.playMenu = function ( channel, client, menu, allowSkip ) {
-		//LAST EDIT : 2015-08-02T19:38
+		var ch = Channels.getChannel( channel.id );
+
 		if ( typeof allowSkip === 'undefined' ) {
 			allowSkip = 1;
 		}
@@ -21,6 +28,7 @@ module.exports = (function () {
 			channel.on( 'StasisEnd', cancelMenu );
 		}
 
+		ch.isPlaying = true;
 		queueUpSound();
 
 		// Cancel the menu, as the user did something
@@ -44,7 +52,7 @@ module.exports = (function () {
 
 				channel.play( { media: state.currentSound }, playback, function ( err ) {
 					if ( err )
-						log.error( err + "h62" );
+						log.error( err + "m47" );
 					// ignore errors
 				} );
 				playback.once( 'PlaybackFinished', function ( event, playback ) {
@@ -53,6 +61,11 @@ module.exports = (function () {
 
 				var nextSoundIndex = menu.sounds.indexOf( state.currentSound ) + 1;
 				state.currentSound = menu.sounds[nextSoundIndex];
+				if ( !state.currentSound ) {
+					state.done = true;
+				}
+			} else {
+				ch.isPlaying = false;
 			}
 
 		}

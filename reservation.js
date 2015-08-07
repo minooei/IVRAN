@@ -21,12 +21,17 @@ var log = bunyan.createLogger( {
 //TODO use timer in a convenient way
 var timers = {};
 
+
+//Last Edit :2015-08-07T23:14
+
+//calls from handler to register events before connect to asterisk
 var start = function Start() {
 
 	//todo change user pass
 	ari.connect( 'http://localhost:8088', 'asterisk', 'asterisk', clientLoaded );
-	//var ChannelsEventEmitter=new EventEmitter();
+
 	var self = this;
+	//SHARING EventEmitter BETWEEN MODULES
 	Channels.setEventEmitter( self );
 
 
@@ -51,8 +56,8 @@ var start = function Start() {
 			channelBundle.exten = channel.dialplan.exten;
 
 			//TODO get channel variable to select proper dialPlan
-			channelBundle.dialPlan = DialPlan( 'UniReservation' );
-
+			//channelBundle.dialPlan = DialPlan( 'UniReservation' );
+			channelBundle.dialPlan = 'UniReservation'; //saving the name of dialPlan is enough ?
 
 			//log.debug(Channels);
 			console.log( clr.green( channelBundle.exten ) );
@@ -65,9 +70,8 @@ var start = function Start() {
 					log.error( err );
 					throw err;
 				}
-				//Emit first event in dialPlan
-				self.emit( channelBundle.dialPlan['1'].handler, channel, client );
-
+				// onstateChanged listener is responsible for call convenient handler
+				self.emit( 'onstateChanged', channel );
 			} );
 		}
 
@@ -76,40 +80,41 @@ var start = function Start() {
 		function dtmfReceived( event, channel ) {
 			//cancelTimeout(channel);
 			var digit = parseInt( event.digit );
-			console.log( 'Channel %s entered %d', channel.name, digit );
+			console.log( clr.blue( 'Channel %s entered %d', channel.name, digit ) );
 
 			var channelBundle = Channels.getChannel( channel.id );
+			var dialPlan = DialPlan( channelBundle.dialPlan );
 
 
 			// will be non-zero if valid
 			var state = channelBundle.state;
-			var valid = ~channelBundle.dialPlan[state].validInput.indexOf( digit );
+			var valid = ~dialPlan[state].validInput.indexOf( digit );
 
-			//TODO CHANGE STATE ONLY IN HANDLER
 
 			if ( valid ) {
-				//changing state if necessary
-				//todo define different inputTypes
-				if ( channelBundle.dialPlan[state].inputType === 'menuSelect' ) {
-					state = state + event.digit;
-					channelBundle.setChannelProperty( channel.id, 'state', state );
-				}
-
-
-				//emit proper event
-				self.emit( Channels[channel.id].dialPlan[state].handler, channel, client );
+				//PASS VALID INPUT TO HANDLER
+				//emit proper handler
+				self.emit( dialPlan[state].handler, channel, client, event.digit );
 
 			} else {
 				console.log( 'Channel %s entered an invalid option!', channel.name );
 
 				//todo emit invalid press handler of dialPlan
-				//for now ignoring invalid input
+				//for now just ignoring invalid input
 			}
 		}
 
-		self.on( 'ChannelPropertyChanged', function ( channel, client ) {
+		//todo this handler can move to handler.js . to be or not to be ?
+		self.on( 'onstateChanged', function ( channel ) {
 
 				//TODO convenient log
+
+				var channelBundle = Channels.getChannel( channel.id );
+				var dialPlan = DialPlan( channelBundle.dialPlan );
+
+				//Emit HANDLER FOR NEW STATE
+				self.emit( dialPlan[channelBundle.state].handler, channel, client );
+
 			}
 		);
 
@@ -128,7 +133,7 @@ var start = function Start() {
 		function stasisEnd( event, channel ) {
 			console.log( clr.red( 'Channel has left the application :', channel.id ) );
 
-			delete Channels[channel.id];
+			Channels.deleteChannel( channel.id );
 			// clean up listeners
 			channel.removeListener( 'ChannelDtmfReceived', dtmfReceived );
 			//cancelTimeout(channel);

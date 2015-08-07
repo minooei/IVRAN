@@ -3,7 +3,7 @@
  */
 var EventEmitter = require( 'events' ).EventEmitter;
 var util = require( 'util' );
-
+//Last Edit :2015-08-06T00:06
 var eventEmitter;
 var Channels = {};
 
@@ -19,13 +19,9 @@ module.exports = {
 		return Channels[id];
 	},
 
-	setChannelProperty: function ( id, key, value ) {
-		Channels[id][key] = value;
-		if ( key == 'state' ) {
-			//emit state change handler
-			//eventEmitter.emit
-		}
-
+	setChannelProperty: function ( channel, key, value ) {
+		Channels[channel.id][key] = value;
+		eventEmitter.emit( 'on' + key + 'Changed', channel );
 	},
 
 	newChannel: function ( id ) {
@@ -34,6 +30,6 @@ module.exports = {
 	},
 
 	deleteChannel: function ( id ) {
-		delete    Channels[id];
+		delete Channels[id];
 	}
 };
