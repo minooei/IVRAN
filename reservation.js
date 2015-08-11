@@ -79,8 +79,8 @@ var start = function Start() {
 		// Main DTMF handler
 		function dtmfReceived( event, channel ) {
 			//cancelTimeout(channel);
-			var digit = parseInt( event.digit );
-			console.log( clr.blue( 'Channel %s entered %d', channel.name, digit ) );
+			//var digit = parseInt( event.digit );
+			console.log( clr.blue( 'Channel %s entered %d', channel.name, event.digit ) );
 
 			var channelBundle = Channels.getChannel( channel.id );
 			var dialPlan = DialPlan( channelBundle.dialPlan );
@@ -88,7 +88,7 @@ var start = function Start() {
 
 			// will be non-zero if valid
 			var state = channelBundle.state;
-			var valid = ~dialPlan[state].validInput.indexOf( digit );
+			var valid = ~dialPlan[state].validInput.indexOf( event.digit );
 
 
 			if ( valid ) {
@@ -104,7 +104,9 @@ var start = function Start() {
 			}
 		}
 
-		//todo this handler can move to handler.js . to be or not to be ?
+		//emit proper handler for new state. Although this handler could moved to
+		//handler.js but because client is needed to pass, this handler stays here !
+		//its not so bad :)
 		self.on( 'onstateChanged', function ( channel ) {
 
 				//TODO convenient log
@@ -117,7 +119,6 @@ var start = function Start() {
 
 			}
 		);
-
 
 		// Cancel the timeout for the channel
 		//function cancelTimeout(channel) {

@@ -4,7 +4,6 @@
 
 //where ever  playing a file set channel.isPlaying true
 
-
 var Channels = require( './channels' );
 
 module.exports = (function () {
