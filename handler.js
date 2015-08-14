@@ -13,7 +13,7 @@ var Channels = require( './channels' );
 var handler = new Handler();
 
 //TODO: ONE HANDLER TO ROLE THEM ALL
-//Last Edit :2015-08-06T00:05
+//Last Edit :2015-08-14T23:12
 //TODO: TWO MAIN HANDLER : PLAY file , GET NUMBER (X)
 
 //use when playing menu that has implicit goto
@@ -50,7 +50,7 @@ handler.on( '12', function ( channel, client, input ) {
 );
 
 //TODO : test it !
-//this handler is like playMenu but the difference is that it does not accept input. if skip allowed, input must pass to next handler
+//this handler is much like "playMenu" but the difference is that it does not accept input. if skip allowed, input must pass to next handler
 handler.on( 'playFiles', function ( channel, client, input ) {
 
 		//TODO convenient log
@@ -62,7 +62,6 @@ handler.on( 'playFiles', function ( channel, client, input ) {
 				var newState = dialPlan[ch.state].next;
 
 				//Passing input to next handler
-				ch.passingArgs = {};
 				ch.passingArgs[dialPlan[newState].handler] = input;
 				Channels.setChannelProperty( channel, 'state', newState );
 
@@ -79,14 +78,32 @@ handler.on( 'getInput', function ( channel, client, input ) {
 		//TODO convenient log
 		var ch = Channels.getChannel( channel.id );
 		var dialPlan = DialPlan( ch.dialPlan );
+		var len = dialPlan[ch.state].inputLength;
+		var handler = dialPlan[ch.state].handler;
+
+		try { //getting pass arguments.only works on first call
+			var valid = ~dialPlan[ch.state].validInput.indexOf( ch.passingArgs[handler] );
+			if ( valid ) {
+				ch.inputs[ch.state] = ch.passingArgs[handler];
+			}
+			delete  ch.passingArgs[handler];
+		} catch ( e ) {
+		}
 
 		if ( input ) {
+			if ( input == '#' ) { //if user terminates input
+				//todo save to mongodb
 
-			//var newState = dialPlan[ch.state].next;
-			//Channels.setChannelProperty( channel, 'state', newState );
+				Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
+			}
+			ch.inputs[ch.state] += input;
 
-		} // if skip not allowed ignore input
+			if ( ch.inputs[ch.state].length == len ) {//if input has finished
+				//todo save to mongodb
 
+				Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
+			}
+		}
 	}
 );
 

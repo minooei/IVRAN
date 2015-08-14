@@ -51,7 +51,7 @@ module.exports = (function () {
 
 				channel.play( { media: state.currentSound }, playback, function ( err ) {
 					if ( err )
-						log.error( err + "m47" );
+						log.error( err + " m54" );
 					// ignore errors
 				} );
 				playback.once( 'PlaybackFinished', function ( event, playback ) {
@@ -65,6 +65,7 @@ module.exports = (function () {
 				}
 			} else {
 				ch.isPlaying = false;
+				//todo consider changing state right here
 			}
 
 		}

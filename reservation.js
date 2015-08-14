@@ -21,8 +21,7 @@ var log = bunyan.createLogger( {
 //TODO use timer in a convenient way
 var timers = {};
 
-
-//Last Edit :2015-08-07T23:14
+//Last Edit :2015-08-14T23:12
 
 //calls from handler to register events before connect to asterisk
 var start = function Start() {
@@ -33,7 +32,6 @@ var start = function Start() {
 	var self = this;
 	//SHARING EventEmitter BETWEEN MODULES
 	Channels.setEventEmitter( self );
-
 
 	// Handler for client being loaded
 	function clientLoaded( err, client ) {
@@ -54,6 +52,8 @@ var start = function Start() {
 			channelBundle.state = '1';
 			channelBundle.CallerID = channel.caller.number;
 			channelBundle.exten = channel.dialplan.exten;
+			channelBundle.inputs = {};
+			channelBundle.passingArgs = {};
 
 			//TODO get channel variable to select proper dialPlan
 			//channelBundle.dialPlan = DialPlan( 'UniReservation' );
@@ -75,7 +75,6 @@ var start = function Start() {
 			} );
 		}
 
-
 		// Main DTMF handler
 		function dtmfReceived( event, channel ) {
 			//cancelTimeout(channel);
@@ -85,11 +84,9 @@ var start = function Start() {
 			var channelBundle = Channels.getChannel( channel.id );
 			var dialPlan = DialPlan( channelBundle.dialPlan );
 
-
 			// will be non-zero if valid
 			var state = channelBundle.state;
 			var valid = ~dialPlan[state].validInput.indexOf( event.digit );
-
 
 			if ( valid ) {
 				//PASS VALID INPUT TO HANDLER
@@ -111,11 +108,11 @@ var start = function Start() {
 
 				//TODO convenient log
 
-				var channelBundle = Channels.getChannel( channel.id );
-				var dialPlan = DialPlan( channelBundle.dialPlan );
+				var ch = Channels.getChannel( channel.id );
+				var dialPlan = DialPlan( ch.dialPlan );
 
 				//Emit HANDLER FOR NEW STATE
-				self.emit( dialPlan[channelBundle.state].handler, channel, client );
+				self.emit( dialPlan[ch.state].handler, channel, client );
 
 			}
 		);
