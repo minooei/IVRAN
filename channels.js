@@ -20,6 +20,7 @@ module.exports = {
 	},
 
 	setChannelProperty: function ( channel, key, value ) {
+		//todo validating value
 		Channels[channel.id][key] = value;
 		eventEmitter.emit( 'on' + key + 'Changed', channel );
 	},

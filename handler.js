@@ -3,7 +3,7 @@
  */
 'use strict';
 
-var Handler = require( './reservation.js' );
+var Handler = require( './myIvr.js' );
 var Methods = require( './methods.js' );
 var DialPlan = require( './dialplans' );
 var Bunyan = require( 'bunyan' );
