@@ -14,21 +14,22 @@ var ObjectId = Schema.Types.ObjectId;
 var usersSchema = new Schema( {
 	phoneNumber: String,
 
-	requests: [{
-		date: { type: Date, default: Date.now },
-		responder: { type: ObjectId, ref: 'administrators' },
-		status: { type: String, default: 'waiting' }
-	}]
+} );
+var requestsSchema = new Schema( {
+	user: { type: ObjectId, ref: 'users' },
+	responder: { type: ObjectId, ref: 'administrators' },
+	request: String,
+	status: { type: String, default: 'waiting' },
+	date: { type: Date, default: Date.now }
 
 } );
 
 //do we need call records?
-var callRecordsSchema = new Schema( {
-	user: { type: ObjectId, ref: 'users' },
-	phoneNumber: String,
-	date: { type: Date, default: Date.now }
-
-} );
+//var callRecordsSchema = new Schema( {
+//	user: { type: ObjectId, ref: 'users' },
+//	phoneNumber: String,
+//	date: { type: Date, default: Date.now }
+//} );
 
 var administratorsSchema = new Schema( {
 	userName: String,
@@ -63,6 +64,6 @@ module.exports = (function () {
 	//mongoose.model(collectionName,schemaName);
 	_return.users = mongoose.model( 'users', usersSchema );
 	_return.administrators = mongoose.model( 'administrators', administratorsSchema );
-
+	_return.requests = mongoose.model( 'requests', requestsSchema );
 	return _return;
 })();
