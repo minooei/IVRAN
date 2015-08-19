@@ -16,7 +16,6 @@ var util = require( 'util' );
 var EventEmitter = require( 'events' ).EventEmitter;
 var DialPlan = require( './dialplans' );
 var bunyan = require( 'bunyan' );
-var clr = require( 'chalk' );
 var Channels = require( './channels' );
 var log = bunyan.createLogger( {
 	name: 'myapp',
@@ -55,21 +54,19 @@ var start = function Start() {
 
 		// Handler for StasisStart event
 		function stasisStart( event, channel ) {
-			console.log( clr.green( 'has entered the application : ', channel.caller.number, channel.id ) );
+			console.log( 'has entered the application : ', channel.caller.number, channel.id );
 			log.info( '%s has entered the application id= %s', channel.caller.number, channel.id );
 
 			var channelBundle = Channels.newChannel( channel.id );
-			channelBundle.state = '1';
+			channelBundle.state = 'first';
 			channelBundle.CallerID = channel.caller.number;
 			channelBundle.exten = channel.dialplan.exten;
 			channelBundle.inputs = {};
 			channelBundle.passingArgs = {};
 
-			//TODO get channel variable to select proper dialPlan
-			//channelBundle.dialPlan = DialPlan( 'UniReservation' );
-			channelBundle.dialPlan = 'UniReservation'; //saving the name of dialPlan is enough ?
+			//TODO get channel variable to use proper dialPlan
+			channelBundle.dialPlan = 'UniReservation';
 
-			//log.debug(Channels);
 			console.log( clr.green( channelBundle.exten ) );
 
 			channel.on( 'ChannelDtmfReceived', dtmfReceived );
@@ -89,7 +86,7 @@ var start = function Start() {
 		function dtmfReceived( event, channel ) {
 			//cancelTimeout(channel);
 			//var digit = parseInt( event.digit );
-			console.log( clr.blue( 'Channel %s entered %d', channel.name, event.digit ) );
+			console.log( 'Channel %s entered %d', channel.name, event.digit );
 
 			var channelBundle = Channels.getChannel( channel.id );
 			var dialPlan = DialPlan( channelBundle.dialPlan );
@@ -139,7 +136,7 @@ var start = function Start() {
 
 		// Handler for StasisEnd event
 		function stasisEnd( event, channel ) {
-			console.log( clr.red( 'Channel has left the application :', channel.id ) );
+			console.log( 'Channel has left the application :', channel.id );
 
 			Channels.deleteChannel( channel.id );
 			// clean up listeners

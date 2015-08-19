@@ -10,10 +10,11 @@ var DialPlans = {};
 DialPlans.UniReservation = {};
 
 //TODO DEFINE GOTO AND NEXT FOR EACH STATE AND ALLOWSKIP{TRUE FALSE}
+//TODO MOVE DIALPLAN TO DB
 //edit: I have delete inputType property as it was useless.
 //Last Edit :2015-08-14T23:01
 
-DialPlans.UniReservation['1'] = {
+DialPlans.UniReservation['first'] = {
 	handler: 'playMenu',
 	goTo: { '1': '11', '2': '12', '3': 'playFiles' },
 	validInput: ['1', '2', '3'],

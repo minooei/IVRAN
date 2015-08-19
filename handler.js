@@ -12,12 +12,11 @@ var Handler = require( './myIvr.js' );
 var Methods = require( './methods.js' );
 var DialPlan = require( './dialplans' );
 var Bunyan = require( 'bunyan' );
-var Color = require( 'chalk' );
 var Channels = require( './channels' );
 
 var handler = new Handler();
 
-//TODO: ONE HANDLER TO ROLE THEM ALL
+//TODO: ONE HANDLER TO ROLE THEM ALL ?
 //Last Edit :2015-08-14T23:12
 //TODO: TWO MAIN HANDLER : PLAY file , GET NUMBER (X)
 
