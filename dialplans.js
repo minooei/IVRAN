@@ -1,6 +1,7 @@
 /*
  MyIvr
- Copyright (C) 2015  mohammad.minooee<mohammad.minooee@gmail.com>
+ Ivr with node-ari
+ Copyright (C) 2015 mohammad.minooee email:mohammad.minooee@gmail.com
 
  This program is free software; you can redistribute it and/or
  modify it under the terms of the GNU General Public License Version 3.
@@ -39,6 +40,7 @@ DialPlans.UniReservation['playFiles'] = {
 };
 DialPlans.UniReservation['getMobile'] = {
 	handler: 'getInput',
+	variable: 'mobile',
 	inputLength: 11,
 	validInput: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '#'],
 	sounds: ['sound:you-entered', 'digits:2']

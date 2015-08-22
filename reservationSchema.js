@@ -1,6 +1,7 @@
 /*
  MyIvr
- Copyright (C) 2015  mohammad.minooee<mohammad.minooee@gmail.com>
+ Ivr with node-ari
+ Copyright (C) 2015 mohammad.minooee email:mohammad.minooee@gmail.com
 
  This program is free software; you can redistribute it and/or
  modify it under the terms of the GNU General Public License Version 3.
@@ -12,7 +13,7 @@ var Schema = mongoose.Schema;
 var ObjectId = Schema.Types.ObjectId;
 
 var usersSchema = new Schema( {
-	phoneNumber: String,
+	phoneNumber: String
 
 } );
 var requestsSchema = new Schema( {
