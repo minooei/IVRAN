@@ -93,6 +93,7 @@ handler.on( 'getInput', function ( channel, client, input ) {
 			}
 			delete  ch.passingInput[handler];
 		} catch ( e ) {
+			console.log( e );
 		}
 
 		if ( input ) {
