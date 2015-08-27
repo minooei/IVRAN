@@ -27,7 +27,8 @@ var log = bunyan.createLogger( {
 		}
 	]
 } );
-
+var db = require( './reservationSchema' );
+var Handler = require( './handler.js' );
 //TODO use timer in a convenient way
 var timers = {};
 
@@ -65,6 +66,14 @@ var start = function Start() {
 			channelBundle.variables = {};
 			channelBundle.passingInput = {};
 
+			var user = new db.users( { phoneNumber: channel.caller.number } );
+			user.save( function ( err ) {
+					if ( err ) {
+						console.log( err );
+						log.error( err );
+					}
+				}
+			);
 			//TODO get channel variable to use proper dialPlan
 			channelBundle.dialPlan = 'UniReservation';
 
@@ -100,7 +109,6 @@ var start = function Start() {
 				//PASS VALID INPUT TO HANDLER
 				//emit proper handler
 				self.emit( dialPlan[state].handler, channel, client, event.digit );
-
 			} else {
 				console.log( 'Channel %s entered an invalid option!', channel.name );
 
@@ -115,14 +123,22 @@ var start = function Start() {
 		//but because client is needed to pass, this handler stays here !
 		//its not so bad :)
 		self.on( 'onstateChanged', function ( channel ) {
-
 				//TODO convenient log
 
 				var ch = Channels.getChannel( channel.id );
 				var dialPlan = DialPlan( ch.dialPlan );
 
+				//passing input from prev state if exist
+				try {
+					var valid = ~dialPlan[state].validInput.indexOf( ch.passingInput[ch.state] );
+					if ( valid ) {
+						var input = ch.passingInput[ch.state];
+						delete  ch.passingInput[ch.state];
+					}
+				} catch ( e ) {
+				}
 				//Emit HANDLER FOR NEW STATE
-				self.emit( dialPlan[ch.state].handler, channel, client );
+				self.emit( dialPlan[ch.state].handler, channel, client, input, true );
 
 			}
 		);
@@ -151,4 +167,4 @@ var start = function Start() {
 	}
 };
 util.inherits( start, EventEmitter );
-module.exports = start;
+module.exports = { start: start };

@@ -11,14 +11,14 @@
 //where ever  playing a file set channel.isPlaying true
 
 var Channels = require( './channels' );
-
-module.exports = (function () {
-	var _return = {};
+//FIXME ERROR ON HANGUP !
+module.exports = {
 
 	//LAST EDIT : 2015-08-07T18:36
 
-	_return.playMenu = function ( channel, client, menu, allowSkip ) {
+	playMenu: function ( channel, client, menu ) {
 		var ch = Channels.getChannel( channel.id );
+		var allowSkip = menu.allowSkip;
 
 		if ( typeof allowSkip === 'undefined' ) {
 			allowSkip = 1;
@@ -43,7 +43,6 @@ module.exports = (function () {
 				state.currentPlayback.stop( function ( err ) {
 				} );
 			}
-
 			// remove listeners as future calls to playIntroMenu will create new ones
 			channel.removeListener( 'ChannelDtmfReceived', cancelMenu );
 			channel.removeListener( 'StasisEnd', cancelMenu );
@@ -75,7 +74,6 @@ module.exports = (function () {
 			}
 
 		}
-	};
+	}
 
-	return _return;
-})();
+};

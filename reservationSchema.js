@@ -13,24 +13,18 @@ var Schema = mongoose.Schema;
 var ObjectId = Schema.Types.ObjectId;
 
 var usersSchema = new Schema( {
-	phoneNumber: String
-
+	phoneNumber: String,
+	mobileNumber: String
 } );
+
 var requestsSchema = new Schema( {
 	user: { type: ObjectId, ref: 'users' },
 	responder: { type: ObjectId, ref: 'administrators' },
+	type: String,
 	request: String,
 	status: { type: String, default: 'waiting' },
 	date: { type: Date, default: Date.now }
-
 } );
-
-//do we need call records?
-//var callRecordsSchema = new Schema( {
-//	user: { type: ObjectId, ref: 'users' },
-//	phoneNumber: String,
-//	date: { type: Date, default: Date.now }
-//} );
 
 var administratorsSchema = new Schema( {
 	userName: String,
@@ -42,22 +36,15 @@ var administratorsSchema = new Schema( {
 
 	mobile: { type: String, trim: true },
 	telephone: { type: String, trim: true },
-	email: { type: String, lowercase: true, trim: true }
+	email: { type: String, lowercase: true, trim: true },
 
-	//free_times: [{
-	//	date: Date,
-	//	times: [{
-	//		day_of_week: {
-	//			type: String,
-	//			enum: {
-	//				values: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
-	//				message: 'enum validator failed for path day_of_week with value `{VALUE}`'
-	//			}
-	//		},
-	//		from: String,
-	//		to: String
-	//	}]
-	//}],
+	free_times: [{
+		date: String,
+		fromHour: Number,
+		toHour: Number,
+		comment: String
+	}]
+
 } );
 
 module.exports = (function () {
