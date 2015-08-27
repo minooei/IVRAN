@@ -31,6 +31,7 @@ DialPlans.UniReservation['11'] = {
 DialPlans.UniReservation['12'] = {
 	handler: '12',
 	validInput: ['1', '2'],
+	next: '12',
 	sounds: ['sound:you-entered', 'digits:2']
 };
 DialPlans.UniReservation['playFiles'] = {
