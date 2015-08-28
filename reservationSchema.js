@@ -8,12 +8,40 @@
  See the LICENSE file at the top of the source tree.
  */
 
+'use strict';
 var mongoose = require( 'mongoose' );
 var Schema = mongoose.Schema;
 var ObjectId = Schema.Types.ObjectId;
+var dbURI = 'mongodb://localhost/astDB';
+
+//TODO MOVE TO STARTER MODULE
+mongoose.connect( dbURI );
+var db = mongoose.connection;
+
+// CONNECTION EVENTS
+// When successfully connected
+db.on( 'connected', function () {
+	console.log( 'Mongoose default connection open to ' + dbURI );
+} );
+// If the connection throws an error
+db.on( 'error', function ( err ) {
+	console.log( 'Mongoose default connection error: ' + err );
+} );
+// When the connection is disconnected
+db.on( 'disconnected', function () {
+	console.log( 'Mongoose default connection disconnected' );
+} );
+
+//process.on( 'SIGINT', function () {
+//	mongoose.connection.close( function () {
+//		console.log( 'Mongoose default connection disconnected through app termination' );
+//		process.exit( 0 );
+//	} );
+//} );
 
 var usersSchema = new Schema( {
 	phoneNumber: String,
+	userId: String,
 	mobileNumber: String
 } );
 
@@ -22,8 +50,9 @@ var requestsSchema = new Schema( {
 	responder: { type: ObjectId, ref: 'administrators' },
 	type: String,
 	request: String,
+	file: Buffer,
 	status: { type: String, default: 'waiting' },
-	date: { type: Date, default: Date.now }
+	date: { type: Date, default: Date.now() }
 } );
 
 var administratorsSchema = new Schema( {
@@ -47,11 +76,11 @@ var administratorsSchema = new Schema( {
 
 } );
 
-module.exports = (function () {
-	var _return = {};
+module.exports = {
+
 	//mongoose.model(collectionName,schemaName);
-	_return.users = mongoose.model( 'users', usersSchema );
-	_return.administrators = mongoose.model( 'administrators', administratorsSchema );
-	_return.requests = mongoose.model( 'requests', requestsSchema );
-	return _return;
-})();
+	users: mongoose.model( 'users', usersSchema ),
+	administrators: mongoose.model( 'administrators', administratorsSchema ),
+	requests: mongoose.model( 'requests', requestsSchema )
+
+};

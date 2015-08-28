@@ -10,6 +10,7 @@
  modify it under the terms of the GNU General Public License Version 3.
  See the LICENSE file at the top of the source tree.
  */
+'use strict';
 var EventEmitter = require( 'events' ).EventEmitter;
 var util = require( 'util' );
 //Last Edit :2015-08-06T00:06

@@ -15,30 +15,49 @@ DialPlans.UniReservation = {};
 //edit: I have delete inputType property as it was useless.
 //Last Edit :2015-08-14T23:01
 
+'use strict';
 DialPlans.UniReservation['first'] = {
 	handler: 'playMenu',
-	goTo: { '1': '11', '2': '12', '3': 'playFiles' },
+	goTo: { '1': 'playFreeTime', '2': 'reserveTime', '3': 'recordVoice' },
 	validInput: ['1', '2', '3'],
 	allowSkip: true,
 	sounds: ['sound:press-1', 'sound:or', 'sound:press-2']
 };
-DialPlans.UniReservation['11'] = {
+DialPlans.UniReservation['playFiles1'] = {
+	handler: 'playFiles',
+	validInput: ['1', '2'],
+	next: 'playFreeTime',
+	sounds: ['sound:you-entered', 'digits:1']
+};
+DialPlans.UniReservation['playFreeTime'] = {
 	handler: '11',
 	validInput: ['1', '2'],
 	next: '12',
 	sounds: ['sound:you-entered', 'digits:1']
 };
-DialPlans.UniReservation['12'] = {
+DialPlans.UniReservation['playFiles2'] = {
+	handler: 'playFiles',
+	validInput: ['1', '2'],
+	next: 'reserveTime',
+	sounds: ['sound:you-entered', 'digits:1']
+};
+DialPlans.UniReservation['reserveTime'] = {
 	handler: '12',
 	validInput: ['1', '2'],
 	next: '12',
 	sounds: ['sound:you-entered', 'digits:2']
 };
-DialPlans.UniReservation['playFiles'] = {
+DialPlans.UniReservation['playFiles3'] = {
 	handler: 'playFiles',
 	validInput: ['1', '2'],
-	sounds: ['sound:you-entered', 'digits:2']
+	next: 'recordVoice',
+	sounds: ['sound:you-entered', 'digits:1']
 };
+DialPlans.UniReservation['recordVoice'] = {
+	handler: 'recordVoice',
+	fileName: 'req'
+};
+
 DialPlans.UniReservation['getMobile'] = {
 	handler: 'getInput',
 	variable: 'mobile',
@@ -46,6 +65,7 @@ DialPlans.UniReservation['getMobile'] = {
 	validInput: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '#'],
 	sounds: ['sound:you-entered', 'digits:2']
 };
+
 function getDialPlan( name ) {
 	return DialPlans[name];
 }

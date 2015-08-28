@@ -10,8 +10,9 @@
 
 //where ever  playing a file set channel.isPlaying true
 
+'use strict';
 var Channels = require( './channels' );
-//FIXME ERROR ON HANGUP !
+
 module.exports = {
 
 	//LAST EDIT : 2015-08-07T18:36
@@ -54,11 +55,15 @@ module.exports = {
 				var playback = client.Playback();
 				state.currentPlayback = playback;
 
-				channel.play( { media: state.currentSound }, playback, function ( err ) {
-					if ( err )
-						log.error( err + " m54" );
-					// ignore errors
-				} );
+				try {//FIXME ERROR ON HANGUP !
+					channel.play( { media: state.currentSound }, playback, function ( err ) {
+						if ( err )
+							log.error( err + " m54" );
+						// ignore errors
+					} );
+				} catch ( e ) {
+					console.log( e )
+				}
 				playback.once( 'PlaybackFinished', function ( event, playback ) {
 					queueUpSound();
 				} );
@@ -74,6 +79,9 @@ module.exports = {
 			}
 
 		}
+	},
+	recordVoice: function ( channel, client, menu ) {
+		channel.record();
 	}
 
 };

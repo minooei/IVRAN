@@ -61,7 +61,7 @@ var start = function Start() {
 
 			var channelBundle = Channels.newChannel( channel.id );
 			channelBundle.state = 'first';
-			channelBundle.CallerID = channel.caller.number;
+			channelBundle.callerId = channel.caller.number;
 			channelBundle.exten = channel.dialplan.exten;
 			channelBundle.variables = {};
 			channelBundle.passingInput = {};
@@ -74,10 +74,9 @@ var start = function Start() {
 					}
 				}
 			);
+
 			//TODO get channel variable to use proper dialPlan
 			channelBundle.dialPlan = 'UniReservation';
-
-			console.log( channelBundle.exten );
 
 			channel.on( 'ChannelDtmfReceived', dtmfReceived );
 
@@ -111,7 +110,6 @@ var start = function Start() {
 				self.emit( dialPlan[state].handler, channel, client, event.digit );
 			} else {
 				console.log( 'Channel %s entered an invalid option!', channel.name );
-
 				//todo emit invalid press handler of dialPlan
 				//for now just ignoring invalid input
 			}

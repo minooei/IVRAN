@@ -105,3 +105,13 @@ handler.on( 'getInput', function ( channel, client, input, isFirst ) {
 	}
 );
 
+handler.on( 'recordVoice', function ( channel, client, input, isFirst ) {
+
+		//TODO convenient log
+		var ch = Channels.getChannel( channel.id );
+		var dialPlan = DialPlan( ch.dialPlan );
+		if ( isFirst ) {
+			Methods.recordVoice( channel, client, dialPlan[ch.state] )
+		}
+	}
+);
