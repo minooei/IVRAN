@@ -14,6 +14,8 @@ var Schema = mongoose.Schema;
 var ObjectId = Schema.Types.ObjectId;
 var dbURI = 'mongodb://localhost/astDB';
 
+var Grid = require( 'gridfs-stream' );
+
 //TODO MOVE TO STARTER MODULE
 mongoose.connect( dbURI );
 var db = mongoose.connection;
@@ -22,6 +24,7 @@ var db = mongoose.connection;
 // When successfully connected
 db.on( 'connected', function () {
 	console.log( 'Mongoose default connection open to ' + dbURI );
+	Grid.mongo = mongoose.mongo;
 } );
 // If the connection throws an error
 db.on( 'error', function ( err ) {
@@ -49,15 +52,15 @@ var requestsSchema = new Schema( {
 	user: { type: ObjectId, ref: 'users' },
 	responder: { type: ObjectId, ref: 'administrators' },
 	type: String,
-	request: String,
-	file: Buffer,
+	requestTime: Number,
+	file: { type: ObjectId, ref: 'fs.files' },
 	status: { type: String, default: 'waiting' },
-	date: { type: Date, default: Date.now() }
+	date: { type: Number, default: Date.now() }
 } );
 
 var administratorsSchema = new Schema( {
 	userName: String,
-	userId: Number,
+	internal: Number,
 	password: String,
 	gender: Boolean,
 	role: String,
@@ -68,7 +71,9 @@ var administratorsSchema = new Schema( {
 	email: { type: String, lowercase: true, trim: true },
 
 	free_times: [{
-		date: String,
+		date: Number,
+		dayNumber: Number,
+		weekly: Boolean,
 		fromHour: Number,
 		toHour: Number,
 		comment: String
@@ -81,6 +86,6 @@ module.exports = {
 	//mongoose.model(collectionName,schemaName);
 	users: mongoose.model( 'users', usersSchema ),
 	administrators: mongoose.model( 'administrators', administratorsSchema ),
-	requests: mongoose.model( 'requests', requestsSchema )
-
+	requests: mongoose.model( 'requests', requestsSchema ),
+	dbConnection: db
 };

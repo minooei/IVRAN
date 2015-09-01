@@ -46,6 +46,7 @@ var start = function Start() {
 
 	// Handler for client being loaded
 	function clientLoaded( err, client ) {
+		console.log( 'connected to asterisk' );
 		if ( err ) {
 			console.log( err );
 			log.error( err );
@@ -65,15 +66,6 @@ var start = function Start() {
 			channelBundle.exten = channel.dialplan.exten;
 			channelBundle.variables = {};
 			channelBundle.passingInput = {};
-
-			var user = new db.users( { phoneNumber: channel.caller.number } );
-			user.save( function ( err ) {
-					if ( err ) {
-						console.log( err );
-						log.error( err );
-					}
-				}
-			);
 
 			//TODO get channel variable to use proper dialPlan
 			channelBundle.dialPlan = 'UniReservation';
@@ -128,13 +120,18 @@ var start = function Start() {
 
 				//passing input from prev state if exist
 				try {
-					var valid = ~dialPlan[state].validInput.indexOf( ch.passingInput[ch.state] );
+					var valid = ~dialPlan[ch.state].validInput.indexOf( ch.passingInput[ch.state] );
+					if ( ch.passingInput[ch.state] == '#' )
+						valid = 0;
 					if ( valid ) {
 						var input = ch.passingInput[ch.state];
+						console.log( 'sending input ' + input )
 						delete  ch.passingInput[ch.state];
 					}
 				} catch ( e ) {
+					console.log( e )
 				}
+				console.log( 'emit new state' + '  ' + channel.id + '  ' + ch.state );
 				//Emit HANDLER FOR NEW STATE
 				self.emit( dialPlan[ch.state].handler, channel, client, input, true );
 

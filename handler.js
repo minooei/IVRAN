@@ -16,7 +16,7 @@ var Bunyan = require( 'bunyan' );
 var Channels = require( './channels' );
 var coreQuery = require( './coreQueries' );
 var db = require( './reservationSchema' );
-
+var Grid = require( 'gridfs-stream' ), fs = require( 'fs' );
 var handler = new Handler();
 
 //TODO: ONE HANDLER TO ROLE THEM ALL ?
@@ -55,6 +55,13 @@ handler.on( '12', function ( channel, client, input, isFirst ) {
 		Methods.playMenu( channel, client, dialPlan['12'] )
 	}
 );
+handler.on( 'recordVoice', function ( channel, client, input, isFirst ) {
+
+		//TODO convenient log
+		var dialPlan = DialPlan( 'UniReservation' );
+
+	}
+);
 
 //TODO : test it !
 //this handler is much like "playMenu" but the difference is that it does not accept input. if skip allowed, input must pass to next handler
@@ -81,27 +88,78 @@ handler.on( 'playFiles', function ( channel, client, input, isFirst ) {
 	}
 );
 
-//TODO : COMPLETE THIS HANDLER GET NUMBER (X)
-handler.on( 'getInput', function ( channel, client, input, isFirst ) {
+handler.on( 'playFreeTime', function ( channel, client, input, isFirst ) {
 
 		//TODO convenient log
 		var ch = Channels.getChannel( channel.id );
 		var dialPlan = DialPlan( ch.dialPlan );
-		var len = dialPlan[ch.state].inputLength;
+
+		if ( isFirst ) {
+			Methods.playMenu( channel, client, dialPlan[ch.state] )
+		}
 
 		if ( input ) {
+			if ( dialPlan[ch.state].allowSkip || ( !ch.isPlaying ) ) {
+				var newState = dialPlan[ch.state].next;
+
+				//Passing input to next handler
+				ch.passingInput[newState] = input;
+				Channels.setChannelProperty( channel, 'state', newState );
+
+			} // if skip not allowed ignore input
+		}
+	}
+);
+
+//TODO : COMPLETE THIS HANDLER GET NUMBER (X)
+handler.on( 'getInput', function ( channel, client, input, isFirst ) {
+
+		//TODO convenient log
+		console.log( 'start handler for getInput ' + channel.id );
+		var ch = Channels.getChannel( channel.id );
+		var dialPlan = DialPlan( ch.dialPlan );
+		var len = dialPlan[ch.state].inputLength;
+		if ( isFirst )
+			ch.variables[ch.state] = '';
+		if ( input ) {
 			if ( input == '#' ) { //if user terminates input
-				coreQuery.dynamicQueryHandler( ch.dialPlan, ch.state, ch.variables[ch.state] );
+				try {
+					ch.variables[dialPlan[ch.state].variable] = ch.variables[ch.state];
+				} catch ( e ) {
+				}
+				coreQuery.dynamicQueryHandler( ch, ch.dialPlan, ch.state, ch.variables[ch.state] );
 				Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
 			}
 
 			ch.variables[ch.state] += input;
+			console.log( ch.variables[ch.state] );
 
 			if ( ch.variables[ch.state].length == len ) {//if input has finished
-				coreQuery.dynamicQueryHandler( ch.dialPlan, ch.state, ch.variables[ch.state] );
+
+				try {
+					ch.variables[dialPlan[ch.state].variable] = ch.variables[ch.state];
+				} catch ( e ) {
+				}
+				//var data={};
+				//data[dialPlan[ch.state].variable ]= ch.variables[ch.state];
+				coreQuery.dynamicQueryHandler( ch, ch.dialPlan, ch.state, ch.variables[ch.state] );
 				Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
 			}
 		}
+	}
+);
+
+handler.on( 'dbQuery', function ( channel, client, input, isFirst ) {
+
+		var ch = Channels.getChannel( channel.id );
+		var dialPlan = DialPlan( ch.dialPlan );
+
+		//TODO convenient log
+		console.log( 'start handler for dbQuery ' + channel.id );
+
+		coreQuery.dynamicQueryHandler( ch, ch.dialPlan, ch.state, ch.variables[ch.state] );
+		Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
+
 	}
 );
 
@@ -110,8 +168,10 @@ handler.on( 'recordVoice', function ( channel, client, input, isFirst ) {
 		//TODO convenient log
 		var ch = Channels.getChannel( channel.id );
 		var dialPlan = DialPlan( ch.dialPlan );
+		dialPlan[ch.state].fileName = channel.id.toString().split( '.' )[0];
 		if ( isFirst ) {
 			Methods.recordVoice( channel, client, dialPlan[ch.state] )
 		}
+
 	}
 );

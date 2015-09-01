@@ -6,9 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository" :
-  { "type" : "git"
-  , "url" : "https://github.com/minooei/IVRAN.git"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/minooei/IVRAN.git"
   },
   "author": "Mohammad Minooei",
   "license": "GPL-3.0",
@@ -17,6 +17,9 @@
     "bunyan": "*",
     "chalk": "^1.1.0",
     "events": "^1.0.2",
+    "fs": "0.0.2",
+    "gridfs-stream": "^1.1.1",
+    "jalali-date": "^0.1.5",
     "mongoose": "^4.1.0",
     "util": "*"
   }
