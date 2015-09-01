@@ -27,7 +27,7 @@ db.on( 'connected', function () {
 	Grid.mongo = mongoose.mongo;
 } );
 // If the connection throws an error
-db.on( 'error', function ( err ) {
+db.on( 'error', function (err) {
 	console.log( 'Mongoose default connection error: ' + err );
 } );
 // When the connection is disconnected
@@ -43,49 +43,49 @@ db.on( 'disconnected', function () {
 //} );
 
 var usersSchema = new Schema( {
-	phoneNumber: String,
-	userId: String,
-	mobileNumber: String
+	phoneNumber:String,
+	userId:String,
+	mobileNumber:String
 } );
 
 var requestsSchema = new Schema( {
-	user: { type: ObjectId, ref: 'users' },
-	responder: { type: ObjectId, ref: 'administrators' },
-	type: String,
-	requestTime: Number,
-	file: { type: ObjectId, ref: 'fs.files' },
-	status: { type: String, default: 'waiting' },
-	date: { type: Number, default: Date.now() }
+	user:{ type:ObjectId, ref:'users' },
+	responder:{ type:ObjectId, ref:'administrators' },
+	type:String,
+	requestTime:String,
+	file:{ type:ObjectId, ref:'fs.files' },
+	status:{ type:String, default:'waiting' },
+	date:{ type:Number, default:Date.now() }
 } );
 
 var administratorsSchema = new Schema( {
-	userName: String,
-	internal: Number,
-	password: String,
-	gender: Boolean,
-	role: String,
-	university: String,
+	userName:String,
+	internal:Number,
+	password:String,
+	gender:Boolean,
+	role:String,
+	university:String,
 
-	mobile: { type: String, trim: true },
-	telephone: { type: String, trim: true },
-	email: { type: String, lowercase: true, trim: true },
+	mobile:{ type:String, trim:true },
+	telephone:{ type:String, trim:true },
+	email:{ type:String, lowercase:true, trim:true },
 
-	free_times: [{
-		date: Number,
-		dayNumber: Number,
-		weekly: Boolean,
-		fromHour: Number,
-		toHour: Number,
-		comment: String
-	}]
+	free_times:[ {
+		date:String,
+		dayNumber:Number,
+		weekly:Boolean,
+		fromHour:Number,
+		toHour:Number,
+		comment:String
+	} ]
 
 } );
 
 module.exports = {
 
 	//mongoose.model(collectionName,schemaName);
-	users: mongoose.model( 'users', usersSchema ),
-	administrators: mongoose.model( 'administrators', administratorsSchema ),
-	requests: mongoose.model( 'requests', requestsSchema ),
-	dbConnection: db
+	users:mongoose.model( 'users', usersSchema ),
+	administrators:mongoose.model( 'administrators', administratorsSchema ),
+	requests:mongoose.model( 'requests', requestsSchema ),
+	dbConnection:db
 };
