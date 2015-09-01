@@ -22,10 +22,10 @@ var DialPlan = require( './dialplans' );
 
 module.exports = {
 
-	dynamicQueryHandler: function ( channel, dp, state, data ) {
+	dynamicQueryHandler:function (channel, dp, state, data) {
 		var dialPlan = DialPlan( channel.dialPlan );
 		try {
-			dbEvent.emit( dialPlan[state].query, channel, data );
+			dbEvent.emit( dialPlan[ state ].query, channel, data );
 		} catch ( e ) {
 		}
 
@@ -33,8 +33,8 @@ module.exports = {
 
 };
 
-dbEvent.on( 'newUser', function ( ch, data ) {
-	db.users.findOne( { phoneNumber: ch.callerId }, function ( err, u ) {
+dbEvent.on( 'newUser', function (ch, data) {
+	db.users.findOne( { phoneNumber:ch.callerId }, function (err, u) {
 		if ( err ) {
 			console.log( err );
 		}
@@ -43,8 +43,8 @@ dbEvent.on( 'newUser', function ( ch, data ) {
 			console.log( u._id );
 			return;
 		}
-		var user = new db.users( { phoneNumber: ch.callerId } );
-		user.save( function ( err ) {
+		var user = new db.users( { phoneNumber:ch.callerId } );
+		user.save( function (err) {
 				if ( err ) {
 					console.log( err );
 				}
@@ -53,14 +53,14 @@ dbEvent.on( 'newUser', function ( ch, data ) {
 		);
 	} );
 } );
-dbEvent.on( 'saveUserMobile', function ( ch, data ) {
-	db.users.findById( ch.variables.userId, function ( err, user ) {
+dbEvent.on( 'saveUserMobile', function (ch, data) {
+	db.users.findById( ch.variables.userId, function (err, user) {
 		if ( err ) {
 			console.log( err );
 		}
 		if ( user ) {
 			user.mobileNumber = data;
-			user.save( function ( err ) {
+			user.save( function (err) {
 				if ( err ) {
 					console.log( err );
 				}
@@ -70,25 +70,25 @@ dbEvent.on( 'saveUserMobile', function ( ch, data ) {
 
 } );
 
-dbEvent.on( 'saveRequest', function ( ch, data ) {
+dbEvent.on( 'saveRequest', function (ch, data) {
 	var type = 'text', reqFile, request;
 
 	if ( ch.variables.recordFileId ) {
 		type = 'file';
 		reqFile = ch.variables.recordFileId;
 	} else {
-		var date = new JDate( [1394, ch.variables.month, ch.variables.day] )._d;
-		date.setHours( ch.variables.hour );
-		request = date.getTime();
-		//request='1394-'+ch.variables.month+'-'+ch.variables.day+'-'+ch.variables.hour;
+		//var date = new JDate( [1394, ch.variables.month, ch.variables.day] )._d;
+		//date.setHours( ch.variables.hour );
+		//request = date.getTime();
+		request = '1394-' + ch.variables.month + '-' + ch.variables.day + '-' + ch.variables.hour;
 	}
 	new db.requests( {
-		user: ch.variables.userId,
-		responder: ch.variables.teacherId,
-		type: type,
-		requestTime: request,
-		file: reqFile
-	} ).save( function ( err ) {
+		user:ch.variables.userId,
+		responder:ch.variables.teacherId,
+		type:type,
+		requestTime:request,
+		file:reqFile
+	} ).save( function (err) {
 			if ( err ) {
 				console.log( err );
 			}
@@ -102,8 +102,8 @@ dbEvent.on( 'saveRequest', function ( ch, data ) {
 		} );
 
 } );
-dbEvent.on( 'selectTeacher', function ( ch, data ) {
-	db.administrators.findOne( { internal: data }, function ( err, teacher ) {
+dbEvent.on( 'selectTeacher', function (ch, data) {
+	db.administrators.findOne( { internal:data }, function (err, teacher) {
 		if ( err ) {
 			console.log( err );
 		}
