@@ -18,21 +18,21 @@ var schema = require( './reservationSchema' );
 
 var d = new Date();
 var weekday = new Array( 7 );
-weekday[ 0 ] = "sunday";
-weekday[ 1 ] = "monday";
-weekday[ 2 ] = "tuesday";
-weekday[ 3 ] = "wednesday";
-weekday[ 4 ] = "thursday";
-weekday[ 5 ] = "friday";
-weekday[ 6 ] = "saturday";
+weekday[0] = "sunday";
+weekday[1] = "monday";
+weekday[2] = "tuesday";
+weekday[3] = "wednesday";
+weekday[4] = "thursday";
+weekday[5] = "friday";
+weekday[6] = "saturday";
 
-var n = weekday[ d.getDay() ];
+var n = weekday[d.getDay()];
 
 module.exports = {
 
 	//LAST EDIT : 2015-08-07T18:36
 
-	playMenu:function (channel, client, menu) {
+	playMenu: function ( channel, client, menu ) {
 		var ch = Channels.getChannel( channel.id );
 		var allowSkip = menu.allowSkip;
 
@@ -40,11 +40,11 @@ module.exports = {
 			allowSkip = 1;
 		}
 		var state = {
-			currentSound:menu.sounds[ 0 ],
-			currentPlayback:undefined,
-			done:false,
-			finished:false,
-			canceled:false
+			currentSound: menu.sounds[0],
+			currentPlayback: undefined,
+			done: false,
+			finished: false,
+			canceled: false
 		};
 		if ( allowSkip ) {
 			channel.on( 'ChannelDtmfReceived', cancelMenu );
@@ -55,7 +55,7 @@ module.exports = {
 		queueUpSound();
 
 		// Cancel the menu, as the user did something
-		function cancelMenu(event, channel) {
+		function cancelMenu( event, channel ) {
 			try {
 				var valid = ~menu.validInput.indexOf( event.digit );
 				if ( !valid )
@@ -66,7 +66,7 @@ module.exports = {
 			state.done = true;
 			state.canceled = true;
 			if ( state.currentPlayback ) {
-				state.currentPlayback.stop( function (err) {
+				state.currentPlayback.stop( function ( err ) {
 				} );
 			}
 			// remove listeners as future calls to playIntroMenu will create new ones
@@ -81,7 +81,7 @@ module.exports = {
 				state.currentPlayback = playback;
 
 				try {//FIXME ERROR ON HANGUP !
-					channel.play( { media:state.currentSound }, playback, function (err) {
+					channel.play( { media: state.currentSound }, playback, function ( err ) {
 						if ( err )
 							log.error( err + " m54" );
 						// ignore errors
@@ -89,12 +89,12 @@ module.exports = {
 				} catch ( e ) {
 					console.log( e )
 				}
-				playback.once( 'PlaybackFinished', function (event, playback) {
+				playback.once( 'PlaybackFinished', function ( event, playback ) {
 					queueUpSound();
 				} );
 
 				var nextSoundIndex = menu.sounds.indexOf( state.currentSound ) + 1;
-				state.currentSound = menu.sounds[ nextSoundIndex ];
+				state.currentSound = menu.sounds[nextSoundIndex];
 				if ( !state.currentSound ) {
 					state.done = true;
 					state.finished = true;
@@ -104,8 +104,9 @@ module.exports = {
 				if ( state.finished && !state.canceled ) {
 					var dialPlan = DialPlan( ch.dialPlan );
 					try {
-						var newState = dialPlan[ ch.state ].next;
-						Channels.setChannelProperty( channel, 'state', newState );
+						var newState = dialPlan[ch.state].next;
+						if ( newState )
+							Channels.setChannelProperty( channel, 'state', newState );
 					} catch ( e ) {
 					}
 				}
@@ -114,10 +115,10 @@ module.exports = {
 
 		}
 	},
-	recordVoice:function (channel, client, menu) {
-		var recording = client.LiveRecording( client, { name:menu.fileName } );
+	recordVoice: function ( channel, client, menu ) {
+		var recording = client.LiveRecording( client, { name: menu.fileName } );
 		channel.on( "ChannelDtmfReceived", onDtmf );
-		function onDtmf(event, channel) {
+		function onDtmf( event, channel ) {
 			try {
 				var valid = ~menu.validInput.indexOf( event.digit );
 				if ( !valid )
@@ -126,31 +127,33 @@ module.exports = {
 				//return;
 			}
 			channel.removeListener( 'ChannelDtmfReceived', onDtmf );
-			recording.stop( { recordingName:menu.fileName }, function (err) {
+			recording.stop( { recordingName: menu.fileName }, function ( err ) {
 				if ( err ) {
 					console.log( err + '114' )
 				} else {
 					var gfs = Grid( schema.dbConnection.db );
 					var writestream = gfs.createWriteStream( {
-						filename:menu.fileName + '.wav',
-						mode:'w',
-						chunkSize:1024
+						filename: menu.fileName + '.wav',
+						mode: 'w',
+						chunkSize: 1024
 					} );
 					fs.createReadStream( '/var/spool/asterisk/recording/' + menu.fileName + '.wav' ).pipe( writestream );
-					writestream.on( 'close', function (file) {
+					writestream.on( 'close', function ( file ) {
 						// do something with `file`
 						var ch = Channels.getChannel( channel.id );
-						ch.variables[ 'recordFileId' ] = file._id;
+						ch.variables['recordFileId'] = file._id;
 						console.log( file.filename + ' Written To DB' );
 						var dialPlan = DialPlan( ch.dialPlan );
-						Channels.setChannelProperty( channel, 'state', dialPlan[ ch.state ].next );
+						var newState = dialPlan[ch.state].next;
+						if ( newState )
+							Channels.setChannelProperty( channel, 'state', newState );
 					} );
 				}
 			} );
 		}
 
-		channel.record( { name:menu.fileName, format:'wav', beep:true, ifExists:'overwrite' }, recording,
-			function (err, liveRecording) {
+		channel.record( { name: menu.fileName, format: 'wav', beep: true, ifExists: 'overwrite' }, recording,
+			function ( err, liveRecording ) {
 				if ( err ) {
 					console.log( err );
 				}

@@ -19,11 +19,11 @@ var DialPlan = require( './dialplans' );
 var bunyan = require( 'bunyan' );
 var Channels = require( './channels' );
 var log = bunyan.createLogger( {
-	name:'myapp',
-	streams:[
+	name: 'myapp',
+	streams: [
 		{
-			level:'debug',
-			path:'./reservation.log'  // log ERROR and above to a file
+			level: 'debug',
+			path: './reservation.log'  // log ERROR and above to a file
 		}
 	]
 } );
@@ -45,7 +45,7 @@ var start = function Start() {
 	Channels.setEventEmitter( self );
 
 	// Handler for client being loaded
-	function clientLoaded(err, client) {
+	function clientLoaded( err, client ) {
 		console.log( 'connected to asterisk' );
 		if ( err ) {
 			console.log( err );
@@ -56,7 +56,7 @@ var start = function Start() {
 		client.on( 'StasisEnd', stasisEnd );
 
 		// Handler for StasisStart event
-		function stasisStart(event, channel) {
+		function stasisStart( event, channel ) {
 			console.log( 'has entered the application : ', channel.caller.number, channel.id );
 			log.info( '%s has entered the application id= %s', channel.caller.number, channel.id );
 
@@ -72,7 +72,7 @@ var start = function Start() {
 
 			channel.on( 'ChannelDtmfReceived', dtmfReceived );
 
-			channel.answer( function (err) {
+			channel.answer( function ( err ) {
 				if ( err ) {
 					console.log( err );
 					log.error( err );
@@ -84,7 +84,7 @@ var start = function Start() {
 		}
 
 		// Main DTMF handler
-		function dtmfReceived(event, channel) {
+		function dtmfReceived( event, channel ) {
 			//cancelTimeout(channel);
 			//var digit = parseInt( event.digit );
 			console.log( 'Channel %s entered %d', channel.name, event.digit );
@@ -96,14 +96,14 @@ var start = function Start() {
 			var state = channelBundle.state;
 
 			try {
-				var valid = ~dialPlan[ state ].validInput.indexOf( event.digit );
+				var valid = ~dialPlan[state].validInput.indexOf( event.digit );
 			} catch ( e ) {
 			}
 
 			if ( valid ) {
 				//PASS VALID INPUT TO HANDLER
 				//emit proper handler
-				self.emit( dialPlan[ state ].handler, channel, client, event.digit );
+				self.emit( dialPlan[state].handler, channel, client, event.digit );
 			} else {
 				console.log( 'Channel %s entered an invalid option!', channel.name );
 				//todo emit invalid press handler of dialPlan
@@ -116,7 +116,7 @@ var start = function Start() {
 		// Although this handler could moved to handler.js
 		//but because client is needed to pass, this handler stays here !
 		//its not so bad :)
-		self.on( 'onstateChanged', function (channel) {
+		self.on( 'onstateChanged', function ( channel ) {
 				//TODO convenient log
 
 				var ch = Channels.getChannel( channel.id );
@@ -124,20 +124,20 @@ var start = function Start() {
 
 				//passing input from prev state if exist
 				try {
-					var valid = ~dialPlan[ ch.state ].validInput.indexOf( ch.passingInput[ ch.state ] );
-					if ( ch.passingInput[ ch.state ] == '#' )
+					var valid = ~dialPlan[ch.state].validInput.indexOf( ch.passingInput[ch.state] );
+					if ( ch.passingInput[ch.state] == '#' )
 						valid = 0;
 					if ( valid ) {
-						var input = ch.passingInput[ ch.state ];
-						console.log( 'sending input ' + input )
-						delete  ch.passingInput[ ch.state ];
+						var input = ch.passingInput[ch.state].toString();
+						console.log( 'sending input ' + input );
+						delete  ch.passingInput[ch.state];
 					}
 				} catch ( e ) {
 					console.log( e )
 				}
 				console.log( 'emit new state' + '  ' + channel.id + '  ' + ch.state );
 				//Emit HANDLER FOR NEW STATE
-				self.emit( dialPlan[ ch.state ].handler, channel, client, input, true );
+				self.emit( dialPlan[ch.state].handler, channel, client, input, true );
 
 			}
 		);
@@ -153,7 +153,7 @@ var start = function Start() {
 		//}
 
 		// Handler for StasisEnd event
-		function stasisEnd(event, channel) {
+		function stasisEnd( event, channel ) {
 			console.log( 'Channel has left the application :', channel.id );
 
 			Channels.deleteChannel( channel.id );
@@ -166,4 +166,4 @@ var start = function Start() {
 	}
 };
 util.inherits( start, EventEmitter );
-module.exports = { start:start };
+module.exports = { start: start };

@@ -35,31 +35,10 @@ handler.on( 'playMenu', function ( channel, client, input, isFirst ) {
 		else if ( input ) {
 			if ( dialPlan[ch.state].allowSkip || ( !ch.isPlaying ) ) {
 				var newState = dialPlan[ch.state].goTo[input];
-				Channels.setChannelProperty( channel, 'state', newState );
+				if ( newState )
+					Channels.setChannelProperty( channel, 'state', newState );
 			} // if skip not allowed ignore input
 		}
-	}
-);
-handler.on( '11', function ( channel, client, input, isFirst ) {
-
-		//TODO convenient log
-		var dialPlan = DialPlan( 'UniReservation' );
-		Methods.playMenu( channel, client, dialPlan['11'] )
-	}
-);
-handler.on( '12', function ( channel, client, input, isFirst ) {
-
-		//TODO convenient log
-
-		var dialPlan = DialPlan( 'UniReservation' );
-		Methods.playMenu( channel, client, dialPlan['12'] )
-	}
-);
-handler.on( 'recordVoice', function ( channel, client, input, isFirst ) {
-
-		//TODO convenient log
-		var dialPlan = DialPlan( 'UniReservation' );
-
 	}
 );
 
@@ -77,11 +56,12 @@ handler.on( 'playFiles', function ( channel, client, input, isFirst ) {
 
 		if ( input ) {
 			if ( dialPlan[ch.state].allowSkip || ( !ch.isPlaying ) ) {
-				var newState = dialPlan[ch.state].next;
 
 				//Passing input to next handler
+				var newState = dialPlan[ch.state].next;
 				ch.passingInput[newState] = input;
-				Channels.setChannelProperty( channel, 'state', newState );
+				if ( newState )
+					Channels.setChannelProperty( channel, 'state', newState );
 
 			} // if skip not allowed ignore input
 		}
@@ -100,11 +80,12 @@ handler.on( 'playFreeTime', function ( channel, client, input, isFirst ) {
 
 		if ( input ) {
 			if ( dialPlan[ch.state].allowSkip || ( !ch.isPlaying ) ) {
-				var newState = dialPlan[ch.state].next;
 
 				//Passing input to next handler
+				var newState = dialPlan[ch.state].next;
 				ch.passingInput[newState] = input;
-				Channels.setChannelProperty( channel, 'state', newState );
+				if ( newState )
+					Channels.setChannelProperty( channel, 'state', newState );
 
 			} // if skip not allowed ignore input
 		}
@@ -128,7 +109,9 @@ handler.on( 'getInput', function ( channel, client, input, isFirst ) {
 				} catch ( e ) {
 				}
 				coreQuery.dynamicQueryHandler( ch, ch.dialPlan, ch.state, ch.variables[ch.state] );
-				Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
+				if ( dialPlan[ch.state].next )
+					Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
+				return;
 			}
 
 			ch.variables[ch.state] += input;
@@ -143,7 +126,8 @@ handler.on( 'getInput', function ( channel, client, input, isFirst ) {
 				//var data={};
 				//data[dialPlan[ch.state].variable ]= ch.variables[ch.state];
 				coreQuery.dynamicQueryHandler( ch, ch.dialPlan, ch.state, ch.variables[ch.state] );
-				Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
+				if ( dialPlan[ch.state].next )
+					Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
 			}
 		}
 	}
@@ -158,7 +142,8 @@ handler.on( 'dbQuery', function ( channel, client, input, isFirst ) {
 		console.log( 'start handler for dbQuery ' + channel.id );
 
 		coreQuery.dynamicQueryHandler( ch, ch.dialPlan, ch.state, ch.variables[ch.state] );
-		Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
+		if ( dialPlan[ch.state].next )
+			Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
 
 	}
 );
