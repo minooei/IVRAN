@@ -77,7 +77,6 @@ handler.on( 'playFreeTime', function ( channel, client, input, isFirst ) {
 		if ( isFirst ) {
 			Methods.playMenu( channel, client, dialPlan[ch.state] )
 		}
-		saveRequest
 		if ( input ) {
 			if ( dialPlan[ch.state].allowSkip || ( !ch.isPlaying ) ) {
 
