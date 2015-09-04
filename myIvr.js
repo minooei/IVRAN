@@ -98,6 +98,7 @@ var start = function Start() {
 			try {
 				var valid = ~dialPlan[state].validInput.indexOf( event.digit );
 			} catch ( e ) {
+				console.log( 'm101:' + e )
 			}
 
 			if ( valid ) {

@@ -16,6 +16,8 @@ var Bunyan = require( 'bunyan' );
 var Channels = require( './channels' );
 var coreQuery = require( './coreQueries' );
 var db = require( './reservationSchema' );
+var JDate = require( 'jalali-date' );
+
 var Grid = require( 'gridfs-stream' ), fs = require( 'fs' );
 var handler = new Handler();
 
@@ -74,22 +76,64 @@ handler.on( 'playFreeTime', function ( channel, client, input, isFirst ) {
 		var ch = Channels.getChannel( channel.id );
 		var dialPlan = DialPlan( ch.dialPlan );
 
+		function sortTimes( a, b ) {
+
+			if ( a.dayNumber < b.dayNumber || a.dayNumber == 6 )
+				return -1;
+			else if ( a.dayNumber == b.dayNumber )
+				return 0;
+			else return 1;
+		}
+
 		if ( isFirst ) {
-			Methods.playMenu( channel, client, dialPlan[ch.state] )
+			coreQuery.dynamicQueryHandler( ch, ch.variables.teacherId, function ( result ) {
+					for ( var i = 0; i < result.length; i++ ) {
+						var today = new JDate();
+						var left = [5, 4, 3, 2, 1, 0, 6];
+						var day = 86400000;
+						if ( result[i].date ) {
+							var s = result[i].date.split( '/' );
+							var date = new JDate( [s[0], s[1], s[2]] );
+							if ( !result[i].weekly ) {
+								var t = today.getTime();
+								var r = date.getTime();
+								if ( r < t || r > t + day * left[today.getDay()] ) {
+									continue;
+								}
+							}
+							result[i].dayNumber = date.getDay();
+
+							//if ( result[i].dayNumber == 7 )
+							//	result[i].dayNumber = 0;
+						}
+					}
+					result.sort( sortTimes );
+					//console.log( result )
+					dialPlan[ch.state].sounds = [];
+					for ( var i = 0; i < result.length; i++ ) {
+						var dName = Methods.getDayName( result[i].dayNumber );
+						dialPlan[ch.state].sounds.push( 'sound:fa/' + dName );
+						dialPlan[ch.state].sounds.push( 'sound:fa/' + result[i].fromHour.toString() );
+						dialPlan[ch.state].sounds.push( 'sound:fa/' + 'to' );
+						dialPlan[ch.state].sounds.push( 'sound:fa/' + result[i].toHour.toString() );
+					}
+					Methods.playMenu( channel, client, dialPlan[ch.state] )
+				}
+			);
 		}
 		if ( input ) {
 			if ( dialPlan[ch.state].allowSkip || ( !ch.isPlaying ) ) {
 
 				//Passing input to next handler
 				var newState = dialPlan[ch.state].next;
-				ch.passingInput[newState] = input;
 				if ( newState )
 					Channels.setChannelProperty( channel, 'state', newState );
 
 			} // if skip not allowed ignore input
 		}
 	}
-);
+)
+;
 
 //TODO : COMPLETE THIS HANDLER GET NUMBER (X)
 handler.on( 'getInput', function ( channel, client, input, isFirst ) {
@@ -107,7 +151,7 @@ handler.on( 'getInput', function ( channel, client, input, isFirst ) {
 					ch.variables[dialPlan[ch.state].variable] = ch.variables[ch.state];
 				} catch ( e ) {
 				}
-				coreQuery.dynamicQueryHandler( ch, ch.dialPlan, ch.state, ch.variables[ch.state] );
+				coreQuery.dynamicQueryHandler( ch, ch.variables[ch.state] );
 				if ( dialPlan[ch.state].next )
 					Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
 				return;
@@ -117,14 +161,13 @@ handler.on( 'getInput', function ( channel, client, input, isFirst ) {
 			console.log( ch.variables[ch.state] );
 
 			if ( ch.variables[ch.state].length == len ) {//if input has finished
-
 				try {
 					ch.variables[dialPlan[ch.state].variable] = ch.variables[ch.state];
 				} catch ( e ) {
 				}
 				//var data={};
 				//data[dialPlan[ch.state].variable ]= ch.variables[ch.state];
-				coreQuery.dynamicQueryHandler( ch, ch.dialPlan, ch.state, ch.variables[ch.state] );
+				coreQuery.dynamicQueryHandler( ch, ch.variables[ch.state] );
 				if ( dialPlan[ch.state].next )
 					Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
 			}
@@ -140,7 +183,7 @@ handler.on( 'dbQuery', function ( channel, client, input, isFirst ) {
 		//TODO convenient log
 		console.log( 'start handler for dbQuery ' + channel.id );
 
-		coreQuery.dynamicQueryHandler( ch, ch.dialPlan, ch.state, ch.variables[ch.state] );
+		coreQuery.dynamicQueryHandler( ch, ch.variables[ch.state] );
 		if ( dialPlan[ch.state].next )
 			Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
 

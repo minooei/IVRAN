@@ -15,8 +15,18 @@ var Channels = require( './channels' );
 var Grid = require( 'gridfs-stream' ), fs = require( 'fs' );
 var DialPlan = require( './dialplans' );
 var schema = require( './reservationSchema' );
+var bunyan = require( 'bunyan' );
 
-var d = new Date();
+var log = bunyan.createLogger( {
+	name: 'myapp',
+	streams: [
+		{
+			level: 'debug',
+			path: './reservation.log'  // log ERROR and above to a file
+		}
+	]
+} );
+
 var weekday = new Array( 7 );
 weekday[0] = "sunday";
 weekday[1] = "monday";
@@ -26,21 +36,21 @@ weekday[4] = "thursday";
 weekday[5] = "friday";
 weekday[6] = "saturday";
 
-var n = weekday[d.getDay()];
-
 module.exports = {
 
-	//LAST EDIT : 2015-08-07T18:36
-
+	getDayName: function ( num ) {
+		return weekday[num];
+	},
 	playMenu: function ( channel, client, menu ) {
 		var ch = Channels.getChannel( channel.id );
 		var allowSkip = menu.allowSkip;
 
-		if ( typeof allowSkip === 'undefined' ) {
-			allowSkip = 1;
-		}
+		//if ( typeof allowSkip === 'undefined' ) {
+		//	allowSkip = 1;
+		//}
 		var state = {
 			currentSound: menu.sounds[0],
+			currentIndex: 0,
 			currentPlayback: undefined,
 			done: false,
 			finished: false,
@@ -82,19 +92,21 @@ module.exports = {
 
 				try {//FIXME ERROR ON HANGUP !
 					channel.play( { media: state.currentSound }, playback, function ( err ) {
-						if ( err )
-							log.error( err + " m54" );
+						if ( err ) {
+							log.error( " m85:" + err + " m54" );
+							console.log( " m86:" + err )
+						}
 						// ignore errors
 					} );
 				} catch ( e ) {
-					console.log( e )
+					console.log( " m91:" + e )
 				}
 				playback.once( 'PlaybackFinished', function ( event, playback ) {
 					queueUpSound();
 				} );
 
-				var nextSoundIndex = menu.sounds.indexOf( state.currentSound ) + 1;
-				state.currentSound = menu.sounds[nextSoundIndex];
+				state.currentIndex++;
+				state.currentSound = menu.sounds[state.currentIndex];
 				if ( !state.currentSound ) {
 					state.done = true;
 					state.finished = true;
@@ -108,6 +120,7 @@ module.exports = {
 						if ( newState )
 							Channels.setChannelProperty( channel, 'state', newState );
 					} catch ( e ) {
+						console.log( " m112:" + e )
 					}
 				}
 				//todo consider changing state right here.strange behavior though !

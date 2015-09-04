@@ -57,6 +57,8 @@ DialPlans.UniReservation['playFiles1'] = {
 DialPlans.UniReservation['playFreeTime'] = {
 	handler: 'playFreeTime',
 	validInput: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '#'],
+	allowSkip: true,
+	query: 'getFreeTime',
 	next: 'mainMenu',
 	sounds: []
 };

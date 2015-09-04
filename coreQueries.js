@@ -22,24 +22,14 @@ var DialPlan = require( './dialplans' );
 
 module.exports = {
 
-	dynamicQueryHandler: function ( channel, dp, state, data ) {
+	dynamicQueryHandler: function ( channel, data, callback ) {
 		var dialPlan = DialPlan( channel.dialPlan );
+		var state = channel.state;
 		try {
-			dbEvent.emit( dialPlan[state].query, channel, data );
+			dbEvent.emit( dialPlan[state].query, channel, data, callback );
 		} catch ( e ) {
 		}
 
-	},
-	getFreeTime: function ( teacherId ) {
-		db.administrators.findById( teacherId, function ( err, data ) {
-			if ( err ) {
-				console.log( 'db error: ' + err );
-				return;
-			}
-			if ( data ) {
-				return data.free_times;
-			}
-		} );
 	}
 
 };
@@ -120,6 +110,20 @@ dbEvent.on( 'selectTeacher', function ( ch, data ) {
 		}
 		if ( teacher ) {
 			ch.variables.teacherId = teacher._id;
+		}
+	} );
+} );
+
+dbEvent.on( 'getFreeTime', function ( ch, teacherId, callback ) {
+	db.administrators.findById( teacherId, function ( err, data ) {
+		if ( err ) {
+			console.log( 'db error: ' + err );
+			return;
+		}
+		if ( data ) {
+			if ( typeof callback === "function" ) {
+				callback( data.free_times );
+			}
 		}
 	} );
 } );
