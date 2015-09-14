@@ -81,7 +81,7 @@ dbEvent.on( 'saveRequest', function ( ch, data ) {
 		//var date = new JDate( [1394, ch.variables.month, ch.variables.day] )._d;
 		//date.setHours( ch.variables.hour );
 		//request = date.getTime();
-		request = '1394-' + ch.variables.month + '-' + ch.variables.day + '-' + ch.variables.hour;
+		request = '1394/' + ch.variables.month + '/' + ch.variables.day + '-' + ch.variables.hour;
 	}
 	new db.requests( {
 		user: ch.variables.userId,
