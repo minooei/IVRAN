@@ -25,16 +25,16 @@ module.exports = {
 	dynamicQueryHandler: function ( channel, data, callback ) {
 		var dialPlan = DialPlan( channel.dialPlan );
 		var state = channel.state;
-		try {
+		if ( dialPlan[state].query ) {
 			dbEvent.emit( dialPlan[state].query, channel, data, callback );
-		} catch ( e ) {
+		} else {
+			callback();
 		}
-
 	}
 
 };
 //TODO PASSING CALL BACK FUNCTION HERE
-dbEvent.on( 'newUser', function ( ch, data ) {
+dbEvent.on( 'newUser', function ( ch, data, callback ) {
 	db.users.findOne( { phoneNumber: ch.callerId }, function ( err, u ) {
 		if ( err ) {
 			console.log( err );
@@ -42,19 +42,25 @@ dbEvent.on( 'newUser', function ( ch, data ) {
 		if ( u ) {
 			ch.variables.userId = u._id;
 			console.log( u._id );
+			if ( typeof callback === "function" ) {
+				callback( u );
+			}
 			return;
 		}
 		var user = new db.users( { phoneNumber: ch.callerId } );
-		user.save( function ( err ) {
+		user.save( function ( err, u ) {
 				if ( err ) {
 					console.log( err );
 				}
 				ch.variables.userId = user._id;
+				if ( typeof callback === "function" ) {
+					callback( u );
+				}
 			}
 		);
 	} );
 } );
-dbEvent.on( 'saveUserMobile', function ( ch, data ) {
+dbEvent.on( 'saveUserMobile', function ( ch, data, callback ) {
 	db.users.findById( ch.variables.userId, function ( err, user ) {
 		if ( err ) {
 			console.log( err );
@@ -67,11 +73,14 @@ dbEvent.on( 'saveUserMobile', function ( ch, data ) {
 				}
 			} );
 		}
+		if ( typeof callback === "function" ) {
+			callback( user );
+		}
 	} );
 
 } );
 
-dbEvent.on( 'saveRequest', function ( ch, data ) {
+dbEvent.on( 'saveRequest', function ( ch, data, callback ) {
 	var type = 'text', reqFile, request;
 
 	if ( ch.variables.recordFileId ) {
@@ -81,7 +90,7 @@ dbEvent.on( 'saveRequest', function ( ch, data ) {
 		//var date = new JDate( [1394, ch.variables.month, ch.variables.day] )._d;
 		//date.setHours( ch.variables.hour );
 		//request = date.getTime();
-		request = '1394-' + ch.variables.month + '-' + ch.variables.day + '-' + ch.variables.hour;
+		request = '1394-' + ch.variables.month + '-' + ch.variables.day + ':' + ch.variables.hour;
 	}
 	new db.requests( {
 		user: ch.variables.userId,
@@ -89,7 +98,7 @@ dbEvent.on( 'saveRequest', function ( ch, data ) {
 		type: type,
 		requestTime: request,
 		file: reqFile
-	} ).save( function ( err ) {
+	} ).save( function ( err, req ) {
 			if ( err ) {
 				console.log( err );
 			}
@@ -100,16 +109,22 @@ dbEvent.on( 'saveRequest', function ( ch, data ) {
 				delete    ch.variables.recordFileId;
 			} catch ( e ) {
 			}
+			if ( typeof callback === "function" ) {
+				callback( req );
+			}
 		} );
 
 } );
-dbEvent.on( 'selectTeacher', function ( ch, data ) {
+dbEvent.on( 'selectTeacher', function ( ch, data, callback ) {
 	db.administrators.findOne( { internal: data }, function ( err, teacher ) {
 		if ( err ) {
 			console.log( err );
 		}
 		if ( teacher ) {
 			ch.variables.teacherId = teacher._id;
+		}
+		if ( typeof callback === "function" ) {
+			callback( teacher );
 		}
 	} );
 } );
@@ -118,6 +133,9 @@ dbEvent.on( 'getFreeTime', function ( ch, teacherId, callback ) {
 	db.administrators.findById( teacherId, function ( err, data ) {
 		if ( err ) {
 			console.log( 'db error: ' + err );
+			if ( typeof callback === "function" ) {
+				callback( data );
+			}
 			return;
 		}
 		if ( data ) {

@@ -18,6 +18,22 @@ var coreQuery = require( './coreQueries' );
 var db = require( './reservationSchema' );
 var JDate = require( 'jalali-date' );
 
+var nodemailer = require( 'nodemailer' );
+
+// create reusable transporter object using SMTP transport
+var transporter = nodemailer.createTransport( {
+	service: 'Gmail',
+	auth: {
+		user: 'mohammad.minooee@gmail.com',
+		pass: 'lplnhakh1'
+	}
+} );
+
+// NB! No need to recreate the transporter object. You can use
+// the same transporter object for all e-mails
+
+// setup e-mail data with unicode symbols
+
 var Grid = require( 'gridfs-stream' ), fs = require( 'fs' );
 var handler = new Handler();
 
@@ -151,9 +167,10 @@ handler.on( 'getInput', function ( channel, client, input, isFirst ) {
 					ch.variables[dialPlan[ch.state].variable] = ch.variables[ch.state];
 				} catch ( e ) {
 				}
-				coreQuery.dynamicQueryHandler( ch, ch.variables[ch.state] );
-				if ( dialPlan[ch.state].next )
-					Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
+				coreQuery.dynamicQueryHandler( ch, ch.variables[ch.state], function () {
+					if ( dialPlan[ch.state].next )
+						Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
+				} );
 				return;
 			}
 
@@ -167,9 +184,10 @@ handler.on( 'getInput', function ( channel, client, input, isFirst ) {
 				}
 				//var data={};
 				//data[dialPlan[ch.state].variable ]= ch.variables[ch.state];
-				coreQuery.dynamicQueryHandler( ch, ch.variables[ch.state] );
-				if ( dialPlan[ch.state].next )
-					Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
+				coreQuery.dynamicQueryHandler( ch, ch.variables[ch.state], function () {
+					if ( dialPlan[ch.state].next )
+						Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
+				} );
 			}
 		}
 	}
@@ -183,10 +201,10 @@ handler.on( 'dbQuery', function ( channel, client, input, isFirst ) {
 		//TODO convenient log
 		console.log( 'start handler for dbQuery ' + channel.id );
 
-		coreQuery.dynamicQueryHandler( ch, ch.variables[ch.state] );
-		if ( dialPlan[ch.state].next )
-			Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
-
+		coreQuery.dynamicQueryHandler( ch, ch.variables[ch.state], function () {
+			if ( dialPlan[ch.state].next )
+				Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
+		} );
 	}
 );
 
@@ -198,6 +216,32 @@ handler.on( 'recordVoice', function ( channel, client, input, isFirst ) {
 		dialPlan[ch.state].fileName = channel.id.toString().split( '.' )[0];
 		if ( isFirst ) {
 			Methods.recordVoice( channel, client, dialPlan[ch.state] )
+		}
+
+	}
+);
+handler.on( 'sendEmail', function ( channel, client, input, isFirst ) {
+
+		//TODO convenient log
+		var ch = Channels.getChannel( channel.id );
+		var dialPlan = DialPlan( ch.dialPlan );
+		var mailOptions = {
+			from: 'mohammad.minooee@gmail.com', // sender address
+			to: 'minooee.mohammad@yahoo.com', // list of receivers
+			subject: 'new request ✔', // Subject line
+			text: 'Hello world ✔', // plaintext body
+			html: '<b>Hello world ✔</b>' // html body
+		};
+		if ( isFirst ) {
+			transporter.sendMail( mailOptions, function ( error, info ) {
+				if ( error ) {
+					console.log( error );
+				} else {
+					console.log( 'Message sent: ' + info.response );
+				}
+				if ( dialPlan[ch.state].next )
+					Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
+			} );
 		}
 
 	}

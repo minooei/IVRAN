@@ -118,8 +118,8 @@ DialPlans.UniReservation['getHour'] = {
 	validInput: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '#'],
 	inputLength: 2,
 	variable: 'hour',
-	query: 'saveRequest',
-	next: 'mainMenu'
+//	query: 'saveRequest',
+	next: 'saveRequest'
 };
 
 DialPlans.UniReservation['playFiles3'] = {
@@ -138,6 +138,10 @@ DialPlans.UniReservation['recordVoice'] = {
 DialPlans.UniReservation['saveRequest'] = {
 	handler: 'dbQuery',
 	query: 'saveRequest',
+	next: 'sendEmail'
+};
+DialPlans.UniReservation['sendEmail'] = {
+	handler: 'sendEmail',
 	next: 'mainMenu'
 };
 

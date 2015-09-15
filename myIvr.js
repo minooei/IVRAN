@@ -124,17 +124,19 @@ var start = function Start() {
 				var dialPlan = DialPlan( ch.dialPlan );
 
 				//passing input from prev state if exist
-				try {
-					var valid = ~dialPlan[ch.state].validInput.indexOf( ch.passingInput[ch.state] );
-					if ( ch.passingInput[ch.state] == '#' )
-						valid = 0;
-					if ( valid ) {
-						var input = ch.passingInput[ch.state].toString();
-						console.log( 'sending input ' + input );
-						delete  ch.passingInput[ch.state];
+				if ( ch.passingInput[ch.state] ) {
+					try {
+						var valid = ~dialPlan[ch.state].validInput.indexOf( ch.passingInput[ch.state] );
+						if ( ch.passingInput[ch.state] == '#' )
+							valid = 0;
+						if ( valid ) {
+							var input = ch.passingInput[ch.state].toString();
+							console.log( 'sending input ' + input );
+							delete  ch.passingInput[ch.state];
+						}
+					} catch ( e ) {
+						console.log( e )
 					}
-				} catch ( e ) {
-					console.log( e )
 				}
 				console.log( 'emit new state' + '  ' + channel.id + '  ' + ch.state );
 				//Emit HANDLER FOR NEW STATE
