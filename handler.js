@@ -29,16 +29,9 @@ var transporter = nodemailer.createTransport( {
 	}
 } );
 
-// NB! No need to recreate the transporter object. You can use
-// the same transporter object for all e-mails
-
-// setup e-mail data with unicode symbols
-
 var Grid = require( 'gridfs-stream' ), fs = require( 'fs' );
 var handler = new Handler();
 
-//TODO: ONE HANDLER TO ROLE THEM ALL ?
-//Last Edit :2015-08-14T23:12
 
 //use when playing menu that has implicit goto
 handler.on( 'playMenu', function ( channel, client, input, isFirst ) {
@@ -54,13 +47,12 @@ handler.on( 'playMenu', function ( channel, client, input, isFirst ) {
 			if ( dialPlan[ch.state].allowSkip || ( !ch.isPlaying ) ) {
 				var newState = dialPlan[ch.state].goTo[input];
 				if ( newState )
-					Channels.setChannelProperty( channel, 'state', newState );
+					Channels.setChannelProperty( channel, 'state', newState );//changing state
 			} // if skip not allowed ignore input
 		}
 	}
 );
 
-//TODO : test it !
 //this handler is much like "playMenu" but the difference is that it does not accept input. if skip allowed, input must pass to next handler
 handler.on( 'playFiles', function ( channel, client, input, isFirst ) {
 
@@ -79,21 +71,22 @@ handler.on( 'playFiles', function ( channel, client, input, isFirst ) {
 				var newState = dialPlan[ch.state].next;
 				ch.passingInput[newState] = input;
 				if ( newState )
-					Channels.setChannelProperty( channel, 'state', newState );
+					Channels.setChannelProperty( channel, 'state', newState );//changing state
 
 			} // if skip not allowed ignore input
 		}
 	}
 );
 
+//play teachers free times
 handler.on( 'playFreeTime', function ( channel, client, input, isFirst ) {
 
 		//TODO convenient log
 		var ch = Channels.getChannel( channel.id );
 		var dialPlan = DialPlan( ch.dialPlan );
 
+		//sort function for free time
 		function sortTimes( a, b ) {
-
 			if ( a.dayNumber < b.dayNumber || a.dayNumber == 6 )
 				return -1;
 			else if ( a.dayNumber == b.dayNumber )
@@ -119,8 +112,6 @@ handler.on( 'playFreeTime', function ( channel, client, input, isFirst ) {
 							}
 							result[i].dayNumber = date.getDay();
 
-							//if ( result[i].dayNumber == 7 )
-							//	result[i].dayNumber = 0;
 						}
 					}
 					result.sort( sortTimes );
@@ -143,7 +134,7 @@ handler.on( 'playFreeTime', function ( channel, client, input, isFirst ) {
 				//Passing input to next handler
 				var newState = dialPlan[ch.state].next;
 				if ( newState )
-					Channels.setChannelProperty( channel, 'state', newState );
+					Channels.setChannelProperty( channel, 'state', newState );//changing state
 
 			} // if skip not allowed ignore input
 		}
@@ -152,6 +143,7 @@ handler.on( 'playFreeTime', function ( channel, client, input, isFirst ) {
 ;
 
 //TODO : COMPLETE THIS HANDLER GET NUMBER (X)
+//getting input from user
 handler.on( 'getInput', function ( channel, client, input, isFirst ) {
 
 		//TODO convenient log
@@ -169,11 +161,12 @@ handler.on( 'getInput', function ( channel, client, input, isFirst ) {
 				}
 				coreQuery.dynamicQueryHandler( ch, ch.variables[ch.state], function () {
 					if ( dialPlan[ch.state].next )
-						Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
+						Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );//changing state
 				} );
 				return;
 			}
 
+			//saving input to channel variable
 			ch.variables[ch.state] += input;
 			console.log( ch.variables[ch.state] );
 
@@ -186,13 +179,14 @@ handler.on( 'getInput', function ( channel, client, input, isFirst ) {
 				//data[dialPlan[ch.state].variable ]= ch.variables[ch.state];
 				coreQuery.dynamicQueryHandler( ch, ch.variables[ch.state], function () {
 					if ( dialPlan[ch.state].next )
-						Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
+						Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );//changing state
 				} );
 			}
 		}
 	}
 );
 
+//execute custom query from dialplan
 handler.on( 'dbQuery', function ( channel, client, input, isFirst ) {
 
 		var ch = Channels.getChannel( channel.id );
@@ -203,11 +197,12 @@ handler.on( 'dbQuery', function ( channel, client, input, isFirst ) {
 
 		coreQuery.dynamicQueryHandler( ch, ch.variables[ch.state], function () {
 			if ( dialPlan[ch.state].next )
-				Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
+				Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );//changing state
 		} );
 	}
 );
 
+//handler for voice recording
 handler.on( 'recordVoice', function ( channel, client, input, isFirst ) {
 
 		//TODO convenient log
@@ -220,6 +215,7 @@ handler.on( 'recordVoice', function ( channel, client, input, isFirst ) {
 
 	}
 );
+//handler for sending email
 handler.on( 'sendEmail', function ( channel, client, input, isFirst ) {
 
 		//TODO convenient log
@@ -240,7 +236,7 @@ handler.on( 'sendEmail', function ( channel, client, input, isFirst ) {
 					console.log( 'Message sent: ' + info.response );
 				}
 				if ( dialPlan[ch.state].next )
-					Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next );
+					Channels.setChannelProperty( channel, 'state', dialPlan[ch.state].next ); //changing state
 			} );
 		}
 

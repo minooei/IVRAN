@@ -29,15 +29,16 @@ var log = bunyan.createLogger( {
 } );
 var db = require( './reservationSchema' );
 var Handler = require( './handler.js' );
+
 //TODO use timer in a convenient way
 var timers = {};
 
-//Last Edit :2015-08-14T23:12
 
 //calls from handler to register events before connect to asterisk
 var start = function Start() {
 
 	//todo change user pass
+	//connecting to asterisk
 	ari.connect( 'http://localhost:8088', 'asterisk', 'asterisk', clientLoaded );
 
 	var self = this;
@@ -55,7 +56,7 @@ var start = function Start() {
 		client.on( 'StasisStart', stasisStart );
 		client.on( 'StasisEnd', stasisEnd );
 
-		// Handler for StasisStart event
+		// Handler for StasisStart event when someone calls
 		function stasisStart( event, channel ) {
 			console.log( 'has entered the application : ', channel.caller.number, channel.id );
 			log.info( '%s has entered the application id= %s', channel.caller.number, channel.id );
@@ -72,6 +73,7 @@ var start = function Start() {
 
 			channel.on( 'ChannelDtmfReceived', dtmfReceived );
 
+			//answering incoming call
 			channel.answer( function ( err ) {
 				if ( err ) {
 					console.log( err );
@@ -86,7 +88,6 @@ var start = function Start() {
 		// Main DTMF handler
 		function dtmfReceived( event, channel ) {
 			//cancelTimeout(channel);
-			//var digit = parseInt( event.digit );
 			console.log( 'Channel %s entered %d', channel.name, event.digit );
 
 			var channelBundle = Channels.getChannel( channel.id );

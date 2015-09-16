@@ -34,6 +34,7 @@ module.exports = {
 
 };
 //TODO PASSING CALL BACK FUNCTION HERE
+//query for saving user
 dbEvent.on( 'newUser', function ( ch, data, callback ) {
 	db.users.findOne( { phoneNumber: ch.callerId }, function ( err, u ) {
 		if ( err ) {
@@ -60,6 +61,7 @@ dbEvent.on( 'newUser', function ( ch, data, callback ) {
 		);
 	} );
 } );
+//query for saving user mobile
 dbEvent.on( 'saveUserMobile', function ( ch, data, callback ) {
 	db.users.findById( ch.variables.userId, function ( err, user ) {
 		if ( err ) {
@@ -79,7 +81,7 @@ dbEvent.on( 'saveUserMobile', function ( ch, data, callback ) {
 	} );
 
 } );
-
+//query for saving user request
 dbEvent.on( 'saveRequest', function ( ch, data, callback ) {
 	var type = 'text', reqFile, request;
 
@@ -115,6 +117,8 @@ dbEvent.on( 'saveRequest', function ( ch, data, callback ) {
 		} );
 
 } );
+
+//select teacher by internal
 dbEvent.on( 'selectTeacher', function ( ch, data, callback ) {
 	db.administrators.findOne( { internal: data }, function ( err, teacher ) {
 		if ( err ) {
@@ -129,6 +133,7 @@ dbEvent.on( 'selectTeacher', function ( ch, data, callback ) {
 	} );
 } );
 
+//select teacher free times from administrators collection
 dbEvent.on( 'getFreeTime', function ( ch, teacherId, callback ) {
 	db.administrators.findById( teacherId, function ( err, data ) {
 		if ( err ) {

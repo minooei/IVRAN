@@ -35,19 +35,14 @@ db.on( 'disconnected', function () {
 	console.log( 'Mongoose default connection disconnected' );
 } );
 
-//process.on( 'SIGINT', function () {
-//	mongoose.connection.close( function () {
-//		console.log( 'Mongoose default connection disconnected through app termination' );
-//		process.exit( 0 );
-//	} );
-//} );
-
+// users whom calling to our number
 var usersSchema = new Schema( {
 	phoneNumber:String,
 	userId:String,
 	mobileNumber:String
 } );
 
+// collection for requests from users
 var requestsSchema = new Schema( {
 	user:{ type:ObjectId, ref:'users' },
 	responder:{ type:ObjectId, ref:'administrators' },
@@ -58,6 +53,7 @@ var requestsSchema = new Schema( {
 	date:{ type:Number, default:Date.now() }
 } );
 
+//collection for system administrators
 var administratorsSchema = new Schema( {
 	userName:String,
 	internal:Number,

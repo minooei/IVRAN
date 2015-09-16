@@ -17,6 +17,8 @@ DialPlans.UniReservation = {};
 
 'use strict';
 
+//states for call
+
 DialPlans.UniReservation['first'] = {
 	handler: 'dbQuery',
 	query: 'newUser',

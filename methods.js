@@ -45,9 +45,7 @@ module.exports = {
 		var ch = Channels.getChannel( channel.id );
 		var allowSkip = menu.allowSkip;
 
-		//if ( typeof allowSkip === 'undefined' ) {
-		//	allowSkip = 1;
-		//}
+		//first state of sounds list
 		var state = {
 			currentSound: menu.sounds[0],
 			currentIndex: 0,
@@ -57,6 +55,7 @@ module.exports = {
 			canceled: false
 		};
 		if ( allowSkip ) {
+			//whether dtmf received or stasis end cancel menu will invoked
 			channel.on( 'ChannelDtmfReceived', cancelMenu );
 			channel.on( 'StasisEnd', cancelMenu );
 		}
@@ -105,8 +104,10 @@ module.exports = {
 					queueUpSound();
 				} );
 
+				//prepare for playing next sound
 				state.currentIndex++;
 				state.currentSound = menu.sounds[state.currentIndex];
+				//finish when sounds list ends
 				if ( !state.currentSound ) {
 					state.done = true;
 					state.finished = true;
@@ -116,9 +117,9 @@ module.exports = {
 				if ( state.finished && !state.canceled ) {
 					var dialPlan = DialPlan( ch.dialPlan );
 					try {
-						var newState = dialPlan[ch.state].next;
+						var newState = dialPlan[ch.state].next; //getting next state
 						if ( newState )
-							Channels.setChannelProperty( channel, 'state', newState );
+							Channels.setChannelProperty( channel, 'state', newState );//changing state
 					} catch ( e ) {
 						console.log( " m112:" + e )
 					}
@@ -129,16 +130,18 @@ module.exports = {
 		}
 	},
 	recordVoice: function ( channel, client, menu ) {
-		var recording = client.LiveRecording( client, { name: menu.fileName } );
+		var recording = client.LiveRecording( client, { name: menu.fileName } ); //recording file name
 		channel.on( "ChannelDtmfReceived", onDtmf );
+		//stop recording on dtmf received
 		function onDtmf( event, channel ) {
 			try {
-				var valid = ~menu.validInput.indexOf( event.digit );
+				var valid = ~menu.validInput.indexOf( event.digit ); //if dtmf is valid input
 				if ( !valid )
 					return;
 			} catch ( e ) {
 				//return;
 			}
+			//remove dtmf received listener
 			channel.removeListener( 'ChannelDtmfReceived', onDtmf );
 			recording.stop( { recordingName: menu.fileName }, function ( err ) {
 				if ( err ) {
@@ -150,21 +153,21 @@ module.exports = {
 						mode: 'w',
 						chunkSize: 1024
 					} );
-					fs.createReadStream( '/var/spool/asterisk/recording/' + menu.fileName + '.wav' ).pipe( writestream );
+					fs.createReadStream( '/var/spool/asterisk/recording/' + menu.fileName + '.wav' ).pipe( writestream ); // reading from file and write to DB
 					writestream.on( 'close', function ( file ) {
-						// do something with `file`
 						var ch = Channels.getChannel( channel.id );
 						ch.variables['recordFileId'] = file._id;
 						console.log( file.filename + ' Written To DB' );
 						var dialPlan = DialPlan( ch.dialPlan );
 						var newState = dialPlan[ch.state].next;
 						if ( newState )
-							Channels.setChannelProperty( channel, 'state', newState );
+							Channels.setChannelProperty( channel, 'state', newState );//changing state
 					} );
 				}
 			} );
 		}
 
+		//start recording
 		channel.record( { name: menu.fileName, format: 'wav', beep: true, ifExists: 'overwrite' }, recording,
 			function ( err, liveRecording ) {
 				if ( err ) {
